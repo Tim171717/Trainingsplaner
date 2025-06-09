@@ -3,7 +3,7 @@ from streamlit_drawable_canvas import st_canvas
 from PIL import Image
 import numpy as np
 from datetime import date, timedelta
-from Trainingsplan_maker2.py import *
+from Trainingsplan_maker2 import *
 
 accounts = {'U13A': '1', 'U13B': '2'}
 Saisons = ['25/26 HR', '25/26 RR']
