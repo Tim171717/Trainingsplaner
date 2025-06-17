@@ -7,6 +7,8 @@ import ast
 import random
 from datetime import datetime, timedelta
 
+weeknum = {'Montag': 0, 'Dienstag': 1, 'Mittwoch': 2, 'Donnerstag': 3, 'Freitag': 4, 'Samstag': 5, 'Sonntag': 6}
+
 def catnum(directory):
     pattern = re.compile(r'^Cat(\d+)\.csv$')
     numbers = []
@@ -49,10 +51,10 @@ def change_training(date, selection, plan, cat_id):
     df.to_csv(plan, index=False)
 
 
-def make_plan(year, date, teamname):
-    df, settings, plan = read_team(teamname, year)
+def make_plan(saison, date, teamname):
+    df, settings, plan = read_team(teamname, saison)
     weekdays = settings["weekdays"].apply(ast.literal_eval)[0]
-    days = get_dates(year, weekdays)
+    days = get_dates(saison, weekdays)
     takes = settings["takes"].apply(ast.literal_eval)[0]
     groupnames = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
     groups = {n: df[df['Kategorie'] == n].reset_index(drop=True) for n in groupnames}
@@ -64,19 +66,27 @@ def make_plan(year, date, teamname):
         before_plan['category'] = before_plan['category'].apply(ast.literal_eval)
         for _, t in before_plan.iterrows():
             for sel, ca in zip(t['selection'], t['category']):
-                cat = t['catalog']
-                dfcur = pd.read_csv(cat)
+                dfcur = df.copy()
                 group = dfcur[dfcur['Kategorie'] == ca].reset_index(drop=True)
-                befores_dict[ca].append(group.index[group['Name'] == sel].tolist()[0])
+                mask = group['Name'] == sel
+                if mask.any():
+                    befores_dict[ca].append(group.index[group['Name'] == sel].tolist()[0])
         before_plan = before_plan.values.tolist()
     else: before_plan = []
     befores = list(befores_dict.values())
     tododays = [day for day in days if day >= date]
     trainings = len(tododays)
 
-    res = np.zeros((trainings, 0), dtype=int)
-    for length, take, before in zip(grouplens, takes, befores):
-        res = np.concatenate((res, numbergen(trainings, length, take, before)), axis=1)
+    n = 0
+    while n < 1000:
+        res = np.zeros((trainings, 0), dtype=int)
+        for length, take, before in zip(grouplens, takes, befores):
+            res = np.concatenate((res, numbergen(trainings, length, take, before)), axis=1)
+        copy = np.unique(res, axis = 0)
+        if len(copy) == len(res):
+            break
+        n += 1
+
     catdir = teamname + '/Catalogs_' + teamname + '/'
     cat = teamname + '/Catalogs_' + teamname + '/Cat' + f'{catnum(catdir):03d}' + '.csv'
     newplan = [[datetime.strftime(b[0], "%Y-%m-%d"), b[1], b[2], b[3]] for b in before_plan]
@@ -90,24 +100,16 @@ def make_plan(year, date, teamname):
                 sel.append(group.loc[pos, 'Name'])
                 ca.append(groupnames[m])
         newplan.append([datetime.strftime(tododays[n], "%Y-%m-%d"), sel, ca, cat])
-    plan_name = teamname + '/Plan_' + teamname + '_' + year + '.csv'
+    plan_name = teamname + '/Plan_' + teamname + '_' + saison + '.csv'
     pf = pd.DataFrame(newplan, columns=['date', 'selection', 'category', 'catalog'])
     pf.to_csv(plan_name, index=False, header=True)
 
-
-def Make_plan(trainings, grouplens, takes, befores):
-    res = np.zeros((trainings, 0), dtype=int)
-    for length, take, before, m in zip(grouplens, takes, befores, range(len(grouplens))):
-        res = np.concatenate((res, numbergen(trainings, length, take, before)), axis=1)
-    return res
-
-def get_dates(year, weekdays):
-    df = pd.read_csv(year + '_info.csv')
+def get_dates(saison, weekdays):
+    df = pd.read_csv(saison + '_info.csv')
     main_start = df.iloc[0]["start"]
     main_end = df.iloc[0]["end"]
 
     all_dates = pd.date_range(main_start, main_end, freq='D')
-    weeknum = {'Mon': 0, 'Tue': 1, 'Wed': 2, 'Thu': 3, 'Fri': 4, 'Sat': 5, 'Sun': 6}
     tdays = all_dates[all_dates.weekday.isin([weeknum[w] for w in weekdays])]
 
     exclude_ranges = df.iloc[1:]
@@ -122,8 +124,13 @@ def get_dates(year, weekdays):
     dates = [datetime.strptime(d.strftime("%Y-%m-%d"), "%Y-%m-%d") for d in filtered_dates]
     return dates
 
+def nextdate(saison, date, weekdays):
+    dates = get_dates(saison, weekdays)
+    dateday = date.replace(hour=0, minute=0, second=0, microsecond=0)
+    return min([d for d in dates if d >= dateday])
+
 def S(s):
-    return s[:2] + '/' + s[2:]
+    return s[:2] + '/' + s[2:4] + ' ' + s[4:]
 
 def shorten(s: str, max_length: int = 40) -> str:
     if len(s) <= max_length:
@@ -140,7 +147,7 @@ def shorten(s: str, max_length: int = 40) -> str:
 
     return result + ' ...'
 
-def plot_cross_matrix_with_groups(Team, Saison):
+def plot_plan(Team, Saison):
     plan_name = Team + '/Plan_' + Team + '_' + Saison + '.csv'
     plan = pd.read_csv(plan_name)
     selections = plan['selection'].apply(ast.literal_eval).tolist()
@@ -246,16 +253,5 @@ def plot_cross_matrix_with_groups(Team, Saison):
 
 
 if __name__ == '__main__':
-    # result = Make_plan(50, [16, 8,6,6], [2,1,0,0], [np.array([]),np.array([])])
-    # copy = np.unique(result, axis=0)
-    # count = 1
-    # while len(copy) < len(result):
-    #     result = Make_plan(50, [16, 8,6,6], [2,1,0,0], [np.array([]),np.array([])])
-    #     copy = np.unique(result, axis=0)
-    #     count += 1
-    #     if count == 1000:
-    #         break
-    # print(result, count)
-
     make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
