@@ -91,7 +91,7 @@ if st.session_state.get('loggedin', False):
             newtakes = st.session_state.get('newtakes')
 
             for n, (id, t) in enumerate(zip(ubs, newtakes)):
-                options = catalog[catalog['Kategorie'] == id].reset_index(drop=True)
+                options = catalog[catalog['Kategorie'] == id].copy().reset_index(drop=True)
 
                 st.markdown(f"#### {id}")
                 cols = st.columns(5)
@@ -101,8 +101,8 @@ if st.session_state.get('loggedin', False):
                             <style>
                             .custom-box {
                                 display: inline-block;
-                                background-color: #f0f2f6; /* light gray background */
-                                color: #262730; /* Streamlit's default text color */
+                                background-color: #f0f2f6;
+                                color: #262730;
                                 font-family: "Source Sans Pro", sans-serif;
                                 font-size: 1rem;
                                 padding: 0.375rem 0.75rem;
@@ -154,6 +154,8 @@ if st.session_state.get('loggedin', False):
             table {
                 width: 705px;
                 border-collapse: collapse;
+                background-color: #ffffff;
+                color: #31333f;
                 margin-bottom: 25px;
                 table-layout: fixed;
             }
@@ -208,7 +210,60 @@ if st.session_state.get('loggedin', False):
         )
 
     with tab3:
-        st.write(3)
+        blocks = {c: {'title': c, 'rows': []} for c in ubs}
+        for c in ubs:
+            info = catalog[catalog['Kategorie'] == c].to_dict(orient='records')
+            for m in range(len(info)):
+                for key in info[m].keys():
+                    if info[m][key] is np.nan:
+                        info[m][key] = ' '
+                blocks[c]['rows'].append(tuple(info[m].values()))
+        blocks = list(blocks.values())
+
+        table_style = """
+                    <style>
+                    table {
+                        width: 705px;
+                        border-collapse: collapse;
+                        background-color: #ffffff;
+                        color: #31333f;
+                        margin-bottom: 25px;
+                        table-layout: fixed;
+                    }
+                    th, td {
+                        border: 1px solid black;
+                        padding: 8px;
+                        vertical-align: top;
+                        word-wrap: break-word;
+                    }
+                    th:nth-child(1), td:nth-child(1) { width: 15%; }  /* Name */
+                    th:nth-child(2), td:nth-child(2) { width: 10%; }  /* Zeit */
+                    th:nth-child(3), td:nth-child(3) { width: 15%; }  /* Ziel */
+                    th:nth-child(4), td:nth-child(4) { width: 30%; }  /* Beschreibung */
+                    th:nth-child(5), td:nth-child(5) { width: 30%; }  /* Anmerkungen */
+                    th {
+                        background-color: #f2f2f2;
+                        text-align: left;
+                    }
+                    .block-title {
+                        font-weight: bold;
+                        font-size: 18px;
+                        margin-top: 30px;
+                    }
+                    </style>
+                    """
+
+        # Build HTML
+        html_content = table_style
+        for block in blocks:
+            html_content += f"<div class='block-title'>{block['title']}</div>"
+            html_content += "<table>"
+            html_content += "<tr><th>Name</th><th>Zeit</th><th>Ziel</th><th>Beschreibung</th><th>Anmerkungen</th></tr>"
+            for name, zeit, ziel, beschr, anm, _ in block["rows"]:
+                html_content += f"<tr><td>{name}</td><td>{zeit}</td><td>{ziel}</td><td>{beschr}</td><td>{anm}</td></tr>"
+            html_content += "</table>"
+
+        st.markdown(html_content, unsafe_allow_html=True)
 
 
     with tab4:
