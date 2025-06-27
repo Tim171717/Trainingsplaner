@@ -3,8 +3,10 @@ import pandas as pd
 import numpy as np
 import ast
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 import locale
+
+from pygments.styles.dracula import selection
 
 from Trainingsplan_maker2 import *
 
@@ -42,11 +44,13 @@ with st.form(key="login_form"):
 if st.session_state.get('loggedin', False):
     Team = st.session_state['Team']
     Saison = st.session_state['Saison']
-    catalog, settings, plan = read_team(Team, Saison)
+    catalog, settings, plan, cat_id, plan_id = read_team(Team, Saison, ids=True)
     weekdays = settings["weekdays"].apply(ast.literal_eval)[0]
     takes = settings["takes"].apply(ast.literal_eval)[0]
     st.session_state['weekdays'] = weekdays
     ndate = nextdate(Saison, datetime.today(), weekdays)
+    if st.session_state.get('selected_date', None) is None:
+        st.session_state['selected_date'] = ndate
     if plan is None:
         startdate = get_dates(Saison, weekdays)[0]
         make_plan(Saison, startdate, Team)
@@ -61,11 +65,15 @@ if st.session_state.get('loggedin', False):
             locale.setlocale(locale.LC_TIME, '')
 
         tab1a, tab2a = st.columns([3, 1])
-
         with tab1a:
             dates = get_dates(Saison, weekdays)
             selected_date = st.selectbox("📅 Wähle ein Datum", dates, index=dates.index(ndate),
                                          format_func=lambda x: x.strftime('%A, %d. %B %Y'), label_visibility='collapsed')
+            if selected_date != st.session_state['selected_date']:
+                st.session_state['selected_date'] = selected_date
+                st.session_state.newexes = None
+                st.session_state.newtakes = None
+
 
         row = plan[plan['date'] == selected_date.strftime("%Y-%m-%d")].copy().reset_index(drop=True)
         exercises = row['selection'].apply(ast.literal_eval)[0]
@@ -74,84 +82,130 @@ if st.session_state.get('loggedin', False):
         cat = row['catalog'][0]
         catdf = pd.read_csv(cat)
 
-        with tab2a:
-            edit = st.button('Bearbeiten')
-
-        # Session state for row tracking
-        if 'num_rows' not in st.session_state:
-            st.session_state.num_rows = 1
+        edit = False
+        if not st.session_state.get('show_edit', False):
+            with tab2a:
+                edit = st.button('Bearbeiten')
 
         if edit:
             st.session_state.show_edit = True
+            st.rerun()
 
         # Edit interface
         if st.session_state.get('show_edit', False):
             if st.session_state.get('newtakes', None) is None:
-                st.session_state.newtakes = takes.copy()
-            newtakes = st.session_state.get('newtakes')
+                st.session_state.newtakes = takes
+            newtakes = st.session_state.newtakes
+            if st.session_state.get('newexes', None) is None:
+                st.session_state.newexes = exercises.copy()
+            newexes = st.session_state.newexes.copy()
+            if selected_date >= datetime.today().replace(hour=0, minute=0, second=0, microsecond=0):
+                with tab2a:
+                    if st.button('Remix'):
+                        make_plan(Saison, selected_date, Team)
+                        st.session_state.newtakes = None
+                        st.session_state.newexes = None
+                        st.rerun()
 
-            for n, (id, t) in enumerate(zip(ubs, newtakes)):
-                options = catalog[catalog['Kategorie'] == id].copy().reset_index(drop=True)
+            keinebox = """
+            <style>
+            .custom-box {
+                display: inline-block;
+                background-color: #f0f2f6;
+                color: #262730;
+                font-family: "Source Sans Pro", sans-serif;
+                font-size: 1rem;
+                padding: 0.375rem 0.75rem;
+                border-radius: 0.5rem;
+                border: none;
+                width: 165px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            </style>
+
+            <div class="custom-box">Keine</div>
+            """
+            otexes = []
+            i = 0
+            for size in newtakes:
+                group = newexes[i:i+size]
+                otexes.append(group)
+                i += size
+
+            for n, (id, t, otex) in enumerate(zip(ubs, newtakes, otexes)):
+                options = catalog[catalog['Kategorie'] == id]['Name'].values.tolist()
 
                 st.markdown(f"#### {id}")
-                cols = st.columns(5)
+                cols = st.columns(4)
                 if t == 0:
                     with cols[0]:
-                        st.markdown("""
-                            <style>
-                            .custom-box {
-                                display: inline-block;
-                                background-color: #f0f2f6;
-                                color: #262730;
-                                font-family: "Source Sans Pro", sans-serif;
-                                font-size: 1rem;
-                                padding: 0.375rem 0.75rem;
-                                border-radius: 0.5rem;
-                                border: none;
-                                width: 130px;
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                            }
-                            </style>
-
-                            <div class="custom-box">Keine</div>
-                        """, unsafe_allow_html=True)
+                        st.markdown(keinebox, unsafe_allow_html=True)
                 else:
                     for col_idx in range(t):
+                        if col_idx < len(otex):
+                            exid = options.index(otex[col_idx])
+                        else: exid = 0
                         with cols[col_idx]:
-                            st.selectbox(f"Auswahl_{n}", options, key=f"Selection{id}{col_idx}", label_visibility='collapsed')
+                            otexes[n][col_idx] = st.selectbox(f"Auswahl_{n}", options, key=f"Selection{id}{col_idx}",
+                                                              label_visibility='collapsed',index=exid)
 
 
-                with cols[4]:
+                with cols[3]:
                     col1, col2 = st.columns([1, 1])
                     if t > 0:
                         with col1:
                             if st.button("➖", key=f"remove{n}"):
-                                st.session_state['newtakes'][n] -= 1
+                                st.session_state.newtakes[n] -= 1
+                                otexes[n].pop()
+                                st.session_state.newexes = [item for group in otexes for item in group]
                                 st.rerun()
-                    if t < 4:
+                    if t < 3:
                         with col2:
                             if st.button("➕", key=f"add{n}"):
-                                st.session_state['newtakes'][n] += 1
+                                st.session_state.newtakes[n] += 1
+                                otexes[n].append(options[0])
+                                st.session_state.newexes = [item for group in otexes for item in group]
                                 st.rerun()
-                if t < 4:
+                if t < 3:
                     with cols[t]:
                         st.markdown(' ')
 
-        if not st.session_state.get('show_edit', False):
+                st.session_state.newexes = [item for group in otexes for item in group]
+
+
+            if st.button("Speichern", key="speichern"):
+                newexes = [item for group in otexes for item in group]
+                newcates = [catalog[catalog['Name'] == ex]['Kategorie'].values[0] for ex in newexes]
+                change_training(selected_date, newexes, newcates, plan_id, cat_id)
+                afterdate = max(selected_date, datetime.today().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1))
+                make_plan(Saison, afterdate, Team)
+                st.session_state.newexes = None
+                st.session_state.newtakes = None
+                st.session_state.show_edit = False
+                st.rerun()
+
+            if st.button("Abbrechen", key="abbrechen"):
+                st.session_state.newexes = None
+                st.session_state.newtakes = None
+                st.session_state.show_edit = False
+                st.rerun()
+
+
+        else:
             blocks = {c: {'title': c, 'rows': []} for c in categories}
             for ex in exercises:
                 info = catdf[catdf['Name'] == ex].to_dict(orient='records')[0]
                 for key in info:
                     if info[key] is np.nan:
-                        info[key] = ''
+                        info[key] = "&nbsp;"
                 blocks[info['Kategorie']]['rows'].append((info['Zeit'], info['Name'], info['Ziel'], info['Beschreibung']))
             blocks = list(blocks.values())
 
-            table_style = """
+            table_style1 = """
             <style>
-            table {
+            .table1 {
                 width: 705px;
                 border-collapse: collapse;
                 background-color: #ffffff;
@@ -159,17 +213,16 @@ if st.session_state.get('loggedin', False):
                 margin-bottom: 25px;
                 table-layout: fixed;
             }
-            th, td {
-                border: 1px solid black;
+            .table1 th, .table1 td {
                 padding: 8px;
                 vertical-align: top;
                 word-wrap: break-word;
             }
-            th:nth-child(1), td:nth-child(1) { width: 10%; }  /* Zeit */
-            th:nth-child(2), td:nth-child(2) { width: 20%; }  /* Name */
-            th:nth-child(3), td:nth-child(3) { width: 20%; }  /* Ziel */
-            th:nth-child(4), td:nth-child(4) { width: 50%; }  /* Beschreibung */
-            th {
+            .table1 th:nth-child(1), .table1 td:nth-child(1) { width: 10%; }
+            .table1 th:nth-child(2), .table1 td:nth-child(2) { width: 20%; }
+            .table1 th:nth-child(3), .table1 td:nth-child(3) { width: 20%; }
+            .table1 th:nth-child(4), .table1 td:nth-child(4) { width: 50%; }
+            .table1 th {
                 background-color: #f2f2f2;
                 text-align: left;
             }
@@ -182,16 +235,16 @@ if st.session_state.get('loggedin', False):
             """
 
             # Build HTML
-            html_content = table_style
+            html_content1 = table_style1
             for block in blocks:
-                html_content += f"<div class='block-title'>{block['title']}</div>"
-                html_content += "<table>"
-                html_content += "<tr><th>Zeit</th><th>Name</th><th>Ziel</th><th>Beschreibung</th></tr>"
+                html_content1 += f"<div class='block-title'>{block['title']}</div>"
+                html_content1 += "<table class='table1'>"
+                html_content1 += "<tr><th>Zeit</th><th>Name</th><th>Ziel</th><th>Beschreibung</th></tr>"
                 for zeit, inhalt, ziel, beschr in block["rows"]:
-                    html_content += f"<tr><td>{zeit}</td><td>{inhalt}</td><td>{ziel}</td><td>{beschr}</td></tr>"
-                html_content += "</table>"
+                    html_content1 += f"<tr><td>{zeit}</td><td>{inhalt}</td><td>{ziel}</td><td>{beschr}</td></tr>"
+                html_content1 += "</table>"
 
-            st.markdown(html_content, unsafe_allow_html=True)
+            st.markdown(html_content1, unsafe_allow_html=True)
 
 
     with tab2:
@@ -216,54 +269,54 @@ if st.session_state.get('loggedin', False):
             for m in range(len(info)):
                 for key in info[m].keys():
                     if info[m][key] is np.nan:
-                        info[m][key] = ' '
+                        info[m][key] = "&nbsp;"
                 blocks[c]['rows'].append(tuple(info[m].values()))
         blocks = list(blocks.values())
 
-        table_style = """
-                    <style>
-                    table {
-                        width: 705px;
-                        border-collapse: collapse;
-                        background-color: #ffffff;
-                        color: #31333f;
-                        margin-bottom: 25px;
-                        table-layout: fixed;
-                    }
-                    th, td {
-                        border: 1px solid black;
-                        padding: 8px;
-                        vertical-align: top;
-                        word-wrap: break-word;
-                    }
-                    th:nth-child(1), td:nth-child(1) { width: 15%; }  /* Name */
-                    th:nth-child(2), td:nth-child(2) { width: 10%; }  /* Zeit */
-                    th:nth-child(3), td:nth-child(3) { width: 15%; }  /* Ziel */
-                    th:nth-child(4), td:nth-child(4) { width: 30%; }  /* Beschreibung */
-                    th:nth-child(5), td:nth-child(5) { width: 30%; }  /* Anmerkungen */
-                    th {
-                        background-color: #f2f2f2;
-                        text-align: left;
-                    }
-                    .block-title {
-                        font-weight: bold;
-                        font-size: 18px;
-                        margin-top: 30px;
-                    }
-                    </style>
-                    """
+        table_style2 = """
+        <style>
+        .table2 {
+            width: 705px;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            color: #31333f;
+            margin-bottom: 25px;
+            table-layout: fixed;
+        }
+        .table2 th, .table2 td {
+            padding: 8px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+        .table2 th:nth-child(1), .table2 td:nth-child(1) { width: 20%; }
+        .table2 th:nth-child(2), .table2 td:nth-child(2) { width: 10%; }
+        .table2 th:nth-child(3), .table2 td:nth-child(3) { width: 10%; }
+        .table2 th:nth-child(4), .table2 td:nth-child(4) { width: 30%; }
+        .table2 th:nth-child(5), .table2 td:nth-child(5) { width: 30%; }
+        .table2 th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        .block-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 30px;
+        }
+        </style>
+        """
+
 
         # Build HTML
-        html_content = table_style
+        html_content2 = table_style2
         for block in blocks:
-            html_content += f"<div class='block-title'>{block['title']}</div>"
-            html_content += "<table>"
-            html_content += "<tr><th>Name</th><th>Zeit</th><th>Ziel</th><th>Beschreibung</th><th>Anmerkungen</th></tr>"
+            html_content2 += f"<div class='block-title'>{block['title']}</div>"
+            html_content2 += "<table class='table2'>"
+            html_content2 += "<tr><th>Name</th><th>Zeit</th><th>Ziel</th><th>Beschreibung</th><th>Anmerkungen</th></tr>"
             for name, zeit, ziel, beschr, anm, _ in block["rows"]:
-                html_content += f"<tr><td>{name}</td><td>{zeit}</td><td>{ziel}</td><td>{beschr}</td><td>{anm}</td></tr>"
-            html_content += "</table>"
+                html_content2 += f"<tr><td>{name}</td><td>{zeit}</td><td>{ziel}</td><td>{beschr}</td><td>{anm}</td></tr>"
+            html_content2 += "</table>"
 
-        st.markdown(html_content, unsafe_allow_html=True)
+        st.markdown(html_content2, unsafe_allow_html=True)
 
 
     with tab4:
@@ -307,5 +360,3 @@ if st.session_state.get('loggedin', False):
                 startdate = datetime.today()
                 make_plan(Saison, startdate, Team)
                 st.rerun()
-
-
