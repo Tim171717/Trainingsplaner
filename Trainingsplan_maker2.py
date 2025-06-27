@@ -21,10 +21,10 @@ def catnum(directory):
 
 def read_team(teamname, Saison, ids=False):
     catdir = teamname + '/Catalogs_' + teamname + '/'
-    cat = teamname + '/Catalogs_' + teamname + '/Cat' + f'{catnum(catdir):03d}' + '.csv'
+    cat = catdir + 'Cat' + f'{catnum(catdir):03d}' + '.csv'
     df = pd.read_csv(cat)
-    Settings = pd.read_csv(teamname + '/Settings_' + teamname + '_' + Saison + '.csv')
-    plan_id = teamname + '/Plan_' + teamname + '_' + Saison + '.csv'
+    Settings = pd.read_csv(teamname + '/Settings_' + teamname + '/Settings_' + teamname + '_' + Saison + '.csv')
+    plan_id = teamname + '/Plans_' + teamname + '/Plan_' + teamname + '_' + Saison + '.csv'
     if os.path.isfile(plan_id):
         Plan = pd.read_csv(plan_id)
         Plan['date'] = pd.to_datetime(Plan['date'])
@@ -112,7 +112,7 @@ def make_plan(saison, date, teamname):
     pf.to_csv(plan_name, index=False, header=True)
 
 def get_dates(saison, weekdays):
-    df = pd.read_csv(saison + '_info.csv')
+    df = pd.read_csv('Saisoninfos/' + saison + '_info.csv')
     main_start = df.iloc[0]["start"]
     main_end = df.iloc[0]["end"]
 
@@ -155,7 +155,7 @@ def shorten(s: str, max_length: int = 40) -> str:
     return result + ' ...'
 
 def plot_plan(Team, Saison):
-    plan_name = Team + '/Plan_' + Team + '_' + Saison + '.csv'
+    plan_name = Team + '/Plans_' + Team + '/Plan_' + Team + '_' + Saison + '.csv'
     plan = pd.read_csv(plan_name)
     selections = plan['selection'].apply(ast.literal_eval).tolist()
 

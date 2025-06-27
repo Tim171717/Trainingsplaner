@@ -6,12 +6,10 @@ import io
 from datetime import datetime, timedelta
 import locale
 
-from pygments.styles.dracula import selection
-
 from Trainingsplan_maker2 import *
 
 accounts = {'U13A': '1', 'U13B': '1'}
-Saisons = {'2526HR': 0, '2526RR': 1}
+Saisons = {'2526HR': 0, '2526RR': 1, '2627HR': 2, '2627RR': 3}
 ubs = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
 if st.session_state.get('Saison', None) is None:
     st.session_state['Saison'] = '2526HR'
@@ -54,7 +52,7 @@ if st.session_state.get('loggedin', False):
     if plan is None:
         startdate = get_dates(Saison, weekdays)[0]
         make_plan(Saison, startdate, Team)
-        plan = read_team(Saison, Team)[2]
+        plan = read_team(Team, Saison)[2]
 
     tab1, tab2, tab3, tab4 = st.tabs(["Nächstes Training", "Plan", "Übungen", "Einstellungen"])
 
@@ -263,60 +261,119 @@ if st.session_state.get('loggedin', False):
         )
 
     with tab3:
-        blocks = {c: {'title': c, 'rows': []} for c in ubs}
-        for c in ubs:
-            info = catalog[catalog['Kategorie'] == c].to_dict(orient='records')
-            for m in range(len(info)):
-                for key in info[m].keys():
-                    if info[m][key] is np.nan:
-                        info[m][key] = "&nbsp;"
-                blocks[c]['rows'].append(tuple(info[m].values()))
-        blocks = list(blocks.values())
+        allcats = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
+        if st.session_state.get('createx', False):
+            Kategorie = st.selectbox('Kategorie', allcats)
+            name = st.text_input('Kategorie Name')
+            Zeit = str(st.number_input('Zeit', min_value=0, max_value=60, step=1)) + 'min'
+            Ziel = st.text_input('Ziel')
+            Beschreibung = st.text_input('Beschreibung')
+            Anmerkungen = st.text_input('Anmerkung')
 
-        table_style2 = """
-        <style>
-        .table2 {
-            width: 705px;
-            border-collapse: collapse;
-            background-color: #ffffff;
-            color: #31333f;
-            margin-bottom: 25px;
-            table-layout: fixed;
-        }
-        .table2 th, .table2 td {
-            padding: 8px;
-            vertical-align: top;
-            word-wrap: break-word;
-        }
-        .table2 th:nth-child(1), .table2 td:nth-child(1) { width: 20%; }
-        .table2 th:nth-child(2), .table2 td:nth-child(2) { width: 10%; }
-        .table2 th:nth-child(3), .table2 td:nth-child(3) { width: 10%; }
-        .table2 th:nth-child(4), .table2 td:nth-child(4) { width: 30%; }
-        .table2 th:nth-child(5), .table2 td:nth-child(5) { width: 30%; }
-        .table2 th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
-        .block-title {
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 30px;
-        }
-        </style>
-        """
+            if st.button("Speichern"):
+                catalog.loc[len(catalog)] = [name, Zeit, Ziel, Beschreibung, Anmerkungen, Kategorie]
+                catdir = Team + '/Catalogs_' + Team + '/'
+                newcatid = catdir + 'Cat' + f'{catnum(catdir)+1:03d}' + '.csv'
+                catalog.to_csv(newcatid, index=False, header=True)
+                st.session_state.createx = False
+                st.rerun()
+
+            if st.button("Verwerfen"):
+                st.session_state.createx = False
+                st.rerun()
+
+        elif st.session_state.get('editex', False):
+            tab1d, tab2d = st.columns(2)
+            with tab1d:
+                Kategorie = st.selectbox('Kategorie', allcats)
+            with tab2d:
+                exes = catalog[catalog['Kategorie'] == Kategorie]
+                Ubung = st.selectbox('Übung', [e[0] for e in exes.values])
+            infos = exes[exes['Name'] == Ubung].values[0]
+            infos = [x if x is not np.nan else '' for x in infos]
+            Zeit = str(st.number_input('Zeit', min_value=0, max_value=60, step=1, value=int(infos[1][:-3]))) + 'min'
+            Ziel = st.text_input('Ziel', value=infos[2])
+            Beschreibung = st.text_input('Beschreibung', value=infos[3])
+            Anmerkungen = st.text_input('Anmerkung', value=infos[4])
+
+            if st.button("Speichern"):
+                catalog[catalog['Name'] == Ubung] = [Ubung, Zeit, Ziel, Beschreibung, Anmerkungen, Kategorie]
+                catdir = Team + '/Catalogs_' + Team + '/'
+                newcatid = catdir + 'Cat' + f'{catnum(catdir):03d}' + '.csv'
+                catalog.to_csv(newcatid, index=False, header=True)
+                st.session_state.editex = False
+                st.rerun()
+
+            if st.button("Verwerfen"):
+                st.session_state.editex = False
+                st.rerun()
+
+        else:
+            tab1c, tab2c = st.columns(2)
+            with tab1c:
+                if st.button('Neue Übung'):
+                    st.session_state.createx = True
+                    st.rerun()
+            with tab2c:
+                if st.button('Übung bearbeiten'):
+                    st.session_state.editex = True
+                    st.rerun()
+
+            blocks = {c: {'title': c, 'rows': []} for c in ubs}
+            for c in ubs:
+                info = catalog[catalog['Kategorie'] == c].to_dict(orient='records')
+                for m in range(len(info)):
+                    for key in info[m].keys():
+                        if info[m][key] is np.nan:
+                            info[m][key] = "&nbsp;"
+                    blocks[c]['rows'].append(tuple(info[m].values()))
+            blocks = list(blocks.values())
+
+            table_style2 = """
+            <style>
+            .table2 {
+                width: 705px;
+                border-collapse: collapse;
+                background-color: #ffffff;
+                color: #31333f;
+                margin-bottom: 25px;
+                table-layout: fixed;
+            }
+            .table2 th, .table2 td {
+                padding: 8px;
+                vertical-align: top;
+                word-wrap: break-word;
+            }
+            .table2 th:nth-child(1), .table2 td:nth-child(1) { width: 20%; }
+            .table2 th:nth-child(2), .table2 td:nth-child(2) { width: 10%; }
+            .table2 th:nth-child(3), .table2 td:nth-child(3) { width: 10%; }
+            .table2 th:nth-child(4), .table2 td:nth-child(4) { width: 30%; }
+            .table2 th:nth-child(5), .table2 td:nth-child(5) { width: 30%; }
+            .table2 th {
+                background-color: #f2f2f2;
+                text-align: left;
+            }
+            .block-title {
+                font-weight: bold;
+                font-size: 18px;
+                margin-top: 30px;
+            }
+            </style>
+            """
 
 
-        # Build HTML
-        html_content2 = table_style2
-        for block in blocks:
-            html_content2 += f"<div class='block-title'>{block['title']}</div>"
-            html_content2 += "<table class='table2'>"
-            html_content2 += "<tr><th>Name</th><th>Zeit</th><th>Ziel</th><th>Beschreibung</th><th>Anmerkungen</th></tr>"
-            for name, zeit, ziel, beschr, anm, _ in block["rows"]:
-                html_content2 += f"<tr><td>{name}</td><td>{zeit}</td><td>{ziel}</td><td>{beschr}</td><td>{anm}</td></tr>"
-            html_content2 += "</table>"
+            # Build HTML
+            html_content2 = table_style2
+            for block in blocks:
+                html_content2 += f"<div class='block-title'>{block['title']}</div>"
+                html_content2 += "<table class='table2'>"
+                html_content2 += "<tr><th>Name</th><th>Zeit</th><th>Ziel</th><th>Beschreibung</th><th>Anmerkungen</th></tr>"
+                for name, zeit, ziel, beschr, anm, _ in block["rows"]:
+                    html_content2 += f"<tr><td>{name}</td><td>{zeit}</td><td>{ziel}</td><td>{beschr}</td><td>{anm}</td></tr>"
+                html_content2 += "</table>"
 
-        st.markdown(html_content2, unsafe_allow_html=True)
+            st.markdown(html_content2, unsafe_allow_html=True)
+
 
 
     with tab4:
