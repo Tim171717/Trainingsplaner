@@ -76,6 +76,7 @@ if st.session_state.get('loggedin', False):
         row = plan[plan['date'] == selected_date.strftime("%Y-%m-%d")].copy().reset_index(drop=True)
         exercises = row['selection'].apply(ast.literal_eval)[0]
         categories = row['category'].apply(ast.literal_eval)[0]
+        thistakes = [categories.count(cat) for cat in ubs]
         categories = [g for g in ubs if g in categories]
         cat = row['catalog'][0]
         catdf = pd.read_csv(cat)
@@ -91,12 +92,12 @@ if st.session_state.get('loggedin', False):
 
         # Edit interface
         if st.session_state.get('show_edit', False):
-            if st.session_state.get('newtakes', None) is None:
-                st.session_state.newtakes = takes
-            newtakes = st.session_state.newtakes
             if st.session_state.get('newexes', None) is None:
                 st.session_state.newexes = exercises.copy()
             newexes = st.session_state.newexes.copy()
+            if st.session_state.get('newtakes', None) is None:
+                st.session_state.newtakes = thistakes
+            newtakes = st.session_state.newtakes
             if selected_date >= datetime.today().replace(hour=0, minute=0, second=0, microsecond=0):
                 with tab2a:
                     if st.button('Remix'):
@@ -261,9 +262,8 @@ if st.session_state.get('loggedin', False):
         )
 
     with tab3:
-        allcats = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
         if st.session_state.get('createx', False):
-            Kategorie = st.selectbox('Kategorie', allcats)
+            Kategorie = st.selectbox('Kategorie', ubs)
             name = st.text_input('Kategorie Name')
             Zeit = str(st.number_input('Zeit', min_value=0, max_value=60, step=1)) + 'min'
             Ziel = st.text_input('Ziel')
@@ -285,7 +285,7 @@ if st.session_state.get('loggedin', False):
         elif st.session_state.get('editex', False):
             tab1d, tab2d = st.columns(2)
             with tab1d:
-                Kategorie = st.selectbox('Kategorie', allcats)
+                Kategorie = st.selectbox('Kategorie', ubs)
             with tab2d:
                 exes = catalog[catalog['Kategorie'] == Kategorie]
                 Ubung = st.selectbox('Übung', [e[0] for e in exes.values])
