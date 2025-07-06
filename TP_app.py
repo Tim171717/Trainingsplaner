@@ -410,10 +410,7 @@ if st.session_state.get('loggedin', False):
 
         if newweekdays != weekdays or newtakes != takes:
             if st.button('Speichern'):
-                newset = {'weekdays': newweekdays, 'takes': newtakes}
-                setname = Team + '/Settings_' + Team + '_' + Saison + '.csv'
-                pf = pd.DataFrame([newset])
-                pf.to_csv(setname, index=False)
+                change_settings(Team, Saison, newweekdays, newtakes)
                 startdate = datetime.today()
                 make_plan(Saison, startdate, Team)
                 st.rerun()

@@ -7,6 +7,11 @@ import ast
 import random
 from datetime import datetime
 import streamlit as st
+from github import Github
+from io import StringIO
+
+g = Github(st.secrets["github_token"])
+repo = g.get_repo("Tim171717/test")
 
 weeknum = {'Montag': 0, 'Dienstag': 1, 'Mittwoch': 2, 'Donnerstag': 3, 'Freitag': 4, 'Samstag': 5, 'Sonntag': 6}
 
@@ -50,12 +55,36 @@ def numbergen(trainings, length, take, before):
 
 
 def change_training(date, selection, categories, plan, cat_id):
+    file = repo.get_contents(plan)
     df = pd.read_csv(plan)
     df['date'] = pd.to_datetime(df['date'])
     df.loc[df['date'] == date, 'selection'] = str(selection)
     df.loc[df['date'] == date, 'category'] = str(categories)
     df.loc[df['date'] == date, 'catalog'] = cat_id
-    df.to_csv(plan, index=False, header=True)
+    updated_content = df.to_csv(index=False)
+
+    repo.update_file(
+        path=plan,
+        message=f"Updated {plan} from Streamlit app",
+        content=updated_content,
+        sha=file.sha,
+        branch="main"
+    )
+
+def change_settings(Team, Saison, newweekdays, newtakes):
+    newset = {'weekdays': newweekdays, 'takes': newtakes}
+    setname = Team + '/Settings_' + Team + '_' + Saison + '.csv'
+    pf = pd.DataFrame([newset])
+    updated_content = pf.to_csv(index=False)
+
+    file = repo.get_contents(setname)
+    repo.update_file(
+        path=setname,
+        message=f"Updated {setname} from Streamlit app",
+        content=updated_content,
+        sha=file.sha,
+        branch="main"
+    )
 
 
 def make_plan(saison, date, teamname):
@@ -109,7 +138,15 @@ def make_plan(saison, date, teamname):
         newplan.append([datetime.strftime(tododays[n], "%Y-%m-%d"), sel, ca, cat])
     plan_name = teamname + '/Plan_' + teamname + '_' + saison + '.csv'
     pf = pd.DataFrame(newplan, columns=['date', 'selection', 'category', 'catalog'])
-    pf.to_csv(plan_name, index=False, header=True)
+    updated_content = pf.to_csv(index=False, header=True)
+    file = repo.get_contents(plan_name)
+    repo.update_file(
+        path=plan_name,
+        message=f"Updated {plan_name} from Streamlit app",
+        content=updated_content,
+        sha=file.sha,
+        branch="main"
+    )
 
 def get_dates(saison, weekdays):
     df = pd.read_csv('Saisoninfos/' + saison + '_info.csv')
@@ -255,8 +292,6 @@ def plot_plan(Team, Saison):
 
     plt.tight_layout()
     return fig
-
-
 
 
 if __name__ == '__main__':
