@@ -178,7 +178,8 @@ if st.session_state.get('loggedin', False):
                 newexes = [item for group in otexes for item in group]
                 newcates = [catalog[catalog['Name'] == ex]['Kategorie'].values[0] for ex in newexes]
                 change_training(selected_date, newexes, newcates, plan_id, cat_id)
-                afterdate = max(selected_date, datetime.today().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1))
+                afterdate = max(selected_date + timedelta(days=1),
+                                datetime.today().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1))
                 make_plan(Saison, afterdate, Team)
                 st.session_state.newexes = None
                 st.session_state.newtakes = None
