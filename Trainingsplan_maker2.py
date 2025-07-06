@@ -11,7 +11,7 @@ from github import Github
 from io import StringIO
 
 g = Github(st.secrets["github_token"])
-repo = g.get_repo("Tim171717/test")
+repo = g.get_repo("Tim171717/Trainingsplaner")
 
 weeknum = {'Montag': 0, 'Dienstag': 1, 'Mittwoch': 2, 'Donnerstag': 3, 'Freitag': 4, 'Samstag': 5, 'Sonntag': 6}
 
