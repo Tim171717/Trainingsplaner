@@ -136,7 +136,7 @@ def make_plan(saison, date, teamname):
                 sel.append(group.loc[pos, 'Name'])
                 ca.append(groupnames[m])
         newplan.append([datetime.strftime(tododays[n], "%Y-%m-%d"), sel, ca, cat])
-    plan_name = teamname + '/Plans_' + teamname + '/Plan_' + teamname + '_' + Saison + '.csv'
+    plan_name = teamname + '/Plans_' + teamname + '/Plan_' + teamname + '_' + saison + '.csv'
     pf = pd.DataFrame(newplan, columns=['date', 'selection', 'category', 'catalog'])
     updated_content = pf.to_csv(index=False, header=True)
     file = repo.get_contents(plan_name)
