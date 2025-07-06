@@ -62,7 +62,9 @@ def change_training(date, selection, categories, plan, cat_id):
     df.loc[df['date'] == date, 'category'] = str(categories)
     df.loc[df['date'] == date, 'catalog'] = cat_id
     df.to_csv(plan, index=False)
-    updated_content = df.to_csv(index=False)
+    buffer = StringIO()
+    df.to_csv(buffer, index=False, header=True)
+    updated_content = buffer.getvalue()
 
     repo.update_file(
         path=plan,
@@ -75,9 +77,11 @@ def change_training(date, selection, categories, plan, cat_id):
 def change_settings(Team, Saison, newweekdays, newtakes):
     newset = {'weekdays': newweekdays, 'takes': newtakes}
     setname = Team + '/Settings_' + Team + '/Settings_' + Team + '_' + Saison + '.csv'
-    pf = pd.DataFrame([newset])
-    pf.to_csv(setname, index=False)
-    updated_content = pf.to_csv(index=False)
+    df = pd.DataFrame([newset])
+    df.to_csv(setname, index=False)
+    buffer = StringIO()
+    df.to_csv(buffer, index=False, header=True)
+    updated_content = buffer.getvalue()
 
     file = repo.get_contents(setname)
     repo.update_file(
@@ -141,7 +145,9 @@ def make_plan(saison, date, teamname):
     plan_name = teamname + '/Plans_' + teamname + '/Plan_' + teamname + '_' + saison + '.csv'
     pf = pd.DataFrame(newplan, columns=['date', 'selection', 'category', 'catalog'])
     pf.to_csv(plan_name, index=False)
-    updated_content = pf.to_csv(index=False, header=True)
+    buffer = StringIO()
+    pf.to_csv(buffer, index=False, header=True)
+    updated_content = buffer.getvalue()
     file = repo.get_contents(plan_name)
     repo.update_file(
         path=plan_name,
