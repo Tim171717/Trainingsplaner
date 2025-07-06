@@ -8,7 +8,7 @@ import locale
 
 from Trainingsplan_maker2 import *
 
-accounts = {'U13A': '1', 'U13B': '1'}
+accounts = dict(st.secrets["teams"])
 Saisons = {'2526HR': 0, '2526RR': 1, '2627HR': 2, '2627RR': 3}
 ubs = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
 if st.session_state.get('Saison', None) is None:
