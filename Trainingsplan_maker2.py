@@ -73,7 +73,7 @@ def change_training(date, selection, categories, plan, cat_id):
 
 def change_settings(Team, Saison, newweekdays, newtakes):
     newset = {'weekdays': newweekdays, 'takes': newtakes}
-    setname = Team + '/Settings_' + Team + '_' + Saison + '.csv'
+    setname = Team + '/Settings_' + Team + '/Settings_' + Team + '_' + Saison + '.csv'
     pf = pd.DataFrame([newset])
     updated_content = pf.to_csv(index=False)
 
@@ -136,7 +136,7 @@ def make_plan(saison, date, teamname):
                 sel.append(group.loc[pos, 'Name'])
                 ca.append(groupnames[m])
         newplan.append([datetime.strftime(tododays[n], "%Y-%m-%d"), sel, ca, cat])
-    plan_name = teamname + '/Plan_' + teamname + '_' + saison + '.csv'
+    plan_name = teamname + '/Plans_' + teamname + '/Plan_' + teamname + '_' + Saison + '.csv'
     pf = pd.DataFrame(newplan, columns=['date', 'selection', 'category', 'catalog'])
     updated_content = pf.to_csv(index=False, header=True)
     file = repo.get_contents(plan_name)
