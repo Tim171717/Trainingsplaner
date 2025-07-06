@@ -51,7 +51,7 @@ if st.session_state.get('loggedin', False):
         st.session_state['selected_date'] = ndate
     if plan is None:
         startdate = get_dates(Saison, weekdays)[0]
-        make_plan(Saison, startdate, Team)
+        make_plan(Saison, startdate, Team, exists=False)
         plan = read_team(Team, Saison)[2]
 
     tab1, tab2, tab3, tab4 = st.tabs(["Nächstes Training", "Plan", "Übungen", "Einstellungen"])

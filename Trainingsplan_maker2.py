@@ -93,7 +93,7 @@ def change_settings(Team, Saison, newweekdays, newtakes):
     )
 
 
-def make_plan(saison, date, teamname):
+def make_plan(saison, date, teamname, exists=True):
     df, settings, plan = read_team(teamname, saison)
     weekdays = settings["weekdays"].apply(ast.literal_eval)[0]
     days = get_dates(saison, weekdays)
@@ -148,14 +148,22 @@ def make_plan(saison, date, teamname):
     buffer = StringIO()
     pf.to_csv(buffer, index=False, header=True)
     updated_content = buffer.getvalue()
-    file = repo.get_contents(plan_name)
-    repo.update_file(
-        path=plan_name,
-        message=f"Updated {plan_name} from Streamlit app",
-        content=updated_content,
-        sha=file.sha,
-        branch="main"
-    )
+    if exists:
+        file = repo.get_contents(plan_name)
+        repo.update_file(
+            path=plan_name,
+            message=f"Updated {plan_name} from Streamlit app",
+            content=updated_content,
+            sha=file.sha,
+            branch="main"
+        )
+    else:
+        repo.create_file(
+            path=plan_name,
+            message=f"Created {plan_name} from Streamlit app",
+            content=updated_content,
+            branch="main"
+        )
 
 def get_dates(saison, weekdays):
     df = pd.read_csv('Saisoninfos/' + saison + '_info.csv')
