@@ -265,7 +265,7 @@ if st.session_state.get('loggedin', False):
     with tab3:
         if st.session_state.get('createx', False):
             Kategorie = st.selectbox('Kategorie', ubs)
-            name = st.text_input('Kategorie Name')
+            name = st.text_input('Name')
             Zeit = str(st.number_input('Zeit', min_value=0, max_value=60, step=1)) + 'min'
             Ziel = st.text_input('Ziel')
             Beschreibung = st.text_input('Beschreibung')
