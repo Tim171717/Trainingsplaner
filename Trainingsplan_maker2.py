@@ -373,7 +373,7 @@ def get_traveltime(arena, startpoint):
     rounded_minutes = math.ceil(total_minutes / 15) * 15
     return timedelta(minutes=rounded_minutes)
 
-def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum'):
+def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum', type='spiel'):
     df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
     spiele = []
     for component in cal.walk():
@@ -393,8 +393,8 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                                'Anpfiff: ' + s[0].strftime('%H:%M')]
         else:
             traveltime = get_traveltime(s[3], startpoint)
-            df.loc[len(df)] = [team + ' Auswärtsspiel gegen ' + opponent, 'Auswärtsspiel', s[3], s[0].strftime('%d.%m.%Y'),
-                               (s[0] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
+            df.loc[len(df)] = [team + ' Auswärts' + type + ' gegen ' + opponent, 'Auswärts' + type, s[3],
+                               s[0].strftime('%d.%m.%Y'), (s[0] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
                                'Anpfiff: ' + s[0].strftime('%H:%M')]
 
     output = StringIO()

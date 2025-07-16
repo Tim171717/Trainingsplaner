@@ -428,13 +428,16 @@ if st.session_state.get('loggedin', False):
         else:
             treffpunkt = st.selectbox(f"Treffpunkt", Hallen.keys())
             uploaded_icsfile = st.file_uploader("Terminplan von Handball.ch hochladen", type="ics")
+            Type = st.selectbox(f'type', ['spiel', 'turnier'])
 
             if st.button("CSV erstellen"):
                 cal = Calendar.from_ical(uploaded_icsfile.read())
                 csv_data = get_Matches(
                     cal,
                     team=Team,
-                    startpoint=Hallen[treffpunkt])
+                    startpoint=Hallen[treffpunkt],
+                    type=Type,
+                )
                 st.success("CSV wurde erstellt!")
 
                 st.download_button(
