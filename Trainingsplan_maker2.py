@@ -5,10 +5,14 @@ import re
 import matplotlib.pyplot as plt
 import ast
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import streamlit as st
 from github import Github
 from io import StringIO
+from icalendar import Calendar
+import math
+import re
+import googlemaps
 
 g = Github(st.secrets["github_token"])
 repo = g.get_repo("Tim171717/Trainingsplaner")
@@ -323,8 +327,78 @@ def get_Gumb(excel_file, Saisons, weekdays, locations=['Goldau', 'Brunnen']):
         df.loc[len(df)] = ['Training ' + location, 'Training', location, d.strftime('%d.%m.%Y'), '17:30', '19:00', '']
     df.to_csv(excel_file[:-4] + 'csv', index=False)
 
+def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
+    parts = summary.split(" - ")
+    if len(parts) < 3:
+        return "Unknown", None
+    home_team = parts[1]
+    away_team = parts[2]
+    if my_team == home_team:
+        return True, away_team
+    elif my_team == away_team:
+        return False, home_team
+    else:
+        return False, None
+
+def get_traveltime(arena, startpoint='Goldau Berufsbildungszentrum'):
+    API_KEY = 'AIzaSyCKg6kl-gZVTUCFOTS70ERXGw67_56bK6E'
+    gmaps = googlemaps.Client(key=API_KEY)
+
+    origins = [startpoint]
+    destinations = [arena]
+
+    result = gmaps.distance_matrix(origins, destinations, mode='driving')
+
+    duration = result['rows'][0]['elements'][0]['duration']['text']
+
+    hours = 0
+    minutes = 0
+    hour_match = re.search(r'(\d+)\s*hour', duration)
+    min_match = re.search(r'(\d+)\s*min', duration)
+    if hour_match:
+        hours = int(hour_match.group(1))
+    if min_match:
+        minutes = int(min_match.group(1))
+    td = timedelta(hours=hours, minutes=minutes)
+
+    total_minutes = td.total_seconds() / 60
+    rounded_minutes = math.ceil(total_minutes / 15) * 15
+    return timedelta(minutes=rounded_minutes)
+
+def get_Matches(ics_file, excel_file, team='U13_A'):
+    df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
+    with open(ics_file, 'rb') as f:
+        cal = Calendar.from_ical(f.read())
+    spiele = []
+    for component in cal.walk():
+        if component.name == "VEVENT":
+            summary = component.get('summary')
+            start = component.get('dtstart').dt
+            end = component.get('dtend').dt
+            location = component.get('location')
+            if location == 'Einsiedeln Brühl': location = 'Einsiedeln Brüel'
+            spiele.append([start, end, summary, location])
+
+    for s in spiele:
+        home, opponent = parse_summary(s[2])
+        if home:
+            df.loc[len(df)] = [team + ' Heimspiel gegen ' + opponent, 'Heimspiel', s[3], s[0].strftime('%d.%m.%Y'),
+                               (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
+                               'Anpfiff: ' + s[0].strftime('%H:%M')]
+        else:
+            traveltime = get_traveltime(s[3])
+            df.loc[len(df)] = [team + ' Auswärtsspiel gegen ' + opponent, 'Auswärtsspiel', s[3], s[0].strftime('%d.%m.%Y'),
+                               (s[0] - timedelta(minutes=30) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
+                               'Anpfiff: ' + s[0].strftime('%H:%M')]
+
+    df.to_csv(excel_file[:-4] + 'csv', index=False)
+
 
 if __name__ == '__main__':
     # make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
-    get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'], ['Mittwoch', 'Freitag'])
+    # get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'], ['Mittwoch', 'Freitag'])
+    get_Matches(
+        'D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics',
+        'D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx'
+    )
