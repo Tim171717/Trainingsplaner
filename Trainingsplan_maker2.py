@@ -310,7 +310,21 @@ def plot_plan(Team, Saison):
     plt.tight_layout()
     return fig
 
+def get_Gumb(excel_file, Saisons, weekdays, locations=['Goldau', 'Brunnen']):
+    df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
+    dates = []
+    for s in Saisons:
+        dates += get_dates(s, weekdays)
+    dates = [d for d in dates if d > datetime.now()]
+    for d in dates:
+        for n, weekday in enumerate(weekdays):
+            if d.weekday() == weeknum[weekday]:
+                location = locations[n]
+        df.loc[len(df)] = ['Training ' + location, 'Training', location, d.strftime('%d.%m.%Y'), '17:30', '19:00', '']
+    df.to_csv(excel_file[:-4] + 'csv', index=False)
+
 
 if __name__ == '__main__':
-    make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
+    # make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
+    get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'], ['Mittwoch', 'Freitag'])
