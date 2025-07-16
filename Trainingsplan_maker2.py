@@ -388,7 +388,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     for s in spiele:
         home, opponent = parse_summary(s[2])
         if home:
-            df.loc[len(df)] = [team + ' Heimspiel gegen ' + opponent, 'Heimspiel', s[3], s[0].strftime('%d.%m.%Y'),
+            df.loc[len(df)] = [team + ' Heim' + type + ' gegen ' + opponent, 'Heim' + type, s[3], s[0].strftime('%d.%m.%Y'),
                                (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
                                'Anpfiff: ' + s[0].strftime('%H:%M')]
         else:
