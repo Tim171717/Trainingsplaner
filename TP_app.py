@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import ast
+from icalendar import Calendar
 import io
 from datetime import datetime, timedelta, time
 import locale
@@ -11,7 +12,10 @@ from Trainingsplan_maker2 import *
 accounts = dict(st.secrets["teams"])
 Saisons = {'2526HR': 0, '2526RR': 1, '2627HR': 2, '2627RR': 3}
 ubs = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
-Hallen = ['Goldau', 'Brunnen', 'Muotathal', 'Schwyz']
+Hallen = {'Goldau': 'Goldau Berufsbildungszentrum',
+          'Brunnen': 'Sporthalle Brunnen',
+          'Muotathal': 'Sporthalle Muotathal',
+          'Schwyz': 'Schwyz Schwyz'}
 if st.session_state.get('Saison', None) is None:
     st.session_state['Saison'] = '2526HR'
 
@@ -400,7 +404,7 @@ if st.session_state.get('loggedin', False):
                                                 label_visibility="collapsed").strftime('%H:%M')
 
                 with col4:
-                    hallen[n] = st.selectbox(f"Halle_{weekday}", Hallen, label_visibility="collapsed")
+                    hallen[n] = st.selectbox(f"Halle_{weekday}", Hallen.keys(), label_visibility="collapsed")
 
 
             if st.button("CSV erstellen"):
@@ -419,6 +423,26 @@ if st.session_state.get('loggedin', False):
                     file_name=f'Gumb_upload.csv',
                     mime='text/csv'
                 )
+
+        else:
+            treffpunkt = st.selectbox(f"Treffpunkt", Hallen.keys())
+            uploaded_icsfile = st.file_uploader("Terminplan von Handball.ch hochladen", type="ics")
+
+            if st.button("CSV erstellen"):
+                cal = Calendar.from_ical(uploaded_icsfile.read())
+                csv_data = get_Matches(
+                    cal,
+                    team=Team,
+                    startpoint=Hallen[treffpunkt])
+                st.success("CSV wurde erstellt!")
+
+                st.download_button(
+                    label="Download CSV",
+                    data=csv_data,
+                    file_name=f'Gumb_upload.csv',
+                    mime='text/csv'
+                )
+
 
 
 

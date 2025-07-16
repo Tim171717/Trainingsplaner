@@ -331,7 +331,6 @@ def get_Gumb(excel_file, Saisons, weekdays=['Mittwoch', 'Freitag'],
     output = StringIO()
     fieldnames = df.columns.tolist()
     writer = csv.DictWriter(output, fieldnames=fieldnames)
-
     writer.writeheader()
     writer.writerows(df.to_dict(orient="records"))
     return output.getvalue()
@@ -349,7 +348,7 @@ def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
     else:
         return False, None
 
-def get_traveltime(arena, startpoint='Goldau Berufsbildungszentrum'):
+def get_traveltime(arena, startpoint):
     API_KEY = st.secrets["google_apikey"]
     gmaps = googlemaps.Client(key=API_KEY)
 
@@ -374,10 +373,8 @@ def get_traveltime(arena, startpoint='Goldau Berufsbildungszentrum'):
     rounded_minutes = math.ceil(total_minutes / 15) * 15
     return timedelta(minutes=rounded_minutes)
 
-def get_Matches(ics_file, excel_file, team='U13_A'):
+def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum'):
     df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
-    with open(ics_file, 'rb') as f:
-        cal = Calendar.from_ical(f.read())
     spiele = []
     for component in cal.walk():
         if component.name == "VEVENT":
@@ -395,23 +392,30 @@ def get_Matches(ics_file, excel_file, team='U13_A'):
                                (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
                                'Anpfiff: ' + s[0].strftime('%H:%M')]
         else:
-            traveltime = get_traveltime(s[3])
+            traveltime = get_traveltime(s[3], startpoint)
             df.loc[len(df)] = [team + ' Auswärtsspiel gegen ' + opponent, 'Auswärtsspiel', s[3], s[0].strftime('%d.%m.%Y'),
-                               (s[0] - timedelta(minutes=30) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
+                               (s[0] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
                                'Anpfiff: ' + s[0].strftime('%H:%M')]
 
-    df.to_csv(excel_file[:-4] + 'csv', index=False)
+    output = StringIO()
+    fieldnames = df.columns.tolist()
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(df.to_dict(orient="records"))
+    return output.getvalue()
 
 
 if __name__ == '__main__':
     # make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
-    csv_string = get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
+    # csv_string = get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
+    # csvname = 'Gumb_output.csv'
+    # with open(csvname, "w", newline='', encoding='utf-8') as f:
+    #     f.write(csv_string)
+
+    with open('D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics', 'rb') as f:
+        cal = Calendar.from_ical(f.read())
+    csv_string = get_Matches(cal)
     csvname = 'Gumb_output.csv'
     with open(csvname, "w", newline='', encoding='utf-8') as f:
         f.write(csv_string)
-
-    # get_Matches(
-    #     'D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics',
-    #     'D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx'
-    # )
