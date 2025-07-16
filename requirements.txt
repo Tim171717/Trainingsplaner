@@ -6,3 +6,4 @@ matplotlib
 PyGitHub
 icalendar
 googlemaps
+openpyxl
