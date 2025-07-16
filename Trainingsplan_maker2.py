@@ -399,7 +399,7 @@ def get_Matches(ics_file, excel_file, team='U13_A'):
 if __name__ == '__main__':
     # make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
-    get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
+    # get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
     # get_Matches(
     #     'D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics',
     #     'D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx'

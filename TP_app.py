@@ -54,7 +54,7 @@ if st.session_state.get('loggedin', False):
         make_plan(Saison, startdate, Team, exists=False)
         plan = read_team(Team, Saison)[2]
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Nächstes Training", "Plan", "Übungen", "Einstellungen"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Nächstes Training", "Plan", "Übungen", "Gumb", "Einstellungen"])
 
     with tab1:
         try:
@@ -376,8 +376,11 @@ if st.session_state.get('loggedin', False):
             st.markdown(html_content2, unsafe_allow_html=True)
 
 
+with tab4:
+    1
 
-    with tab4:
+
+    with tab5:
         st.header("Saison")
         row1, row2 = st.columns([1,3])
         with row1:
