@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import ast
 import io
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import locale
 
 from Trainingsplan_maker2 import *
@@ -11,6 +11,7 @@ from Trainingsplan_maker2 import *
 accounts = dict(st.secrets["teams"])
 Saisons = {'2526HR': 0, '2526RR': 1, '2627HR': 2, '2627RR': 3}
 ubs = ['Einlaufen', 'Technik', 'Spielfähigkeit', 'Anderes']
+Hallen = ['Goldau', 'Brunnen', 'Muotathal', 'Schwyz']
 if st.session_state.get('Saison', None) is None:
     st.session_state['Saison'] = '2526HR'
 
@@ -376,8 +377,49 @@ if st.session_state.get('loggedin', False):
             st.markdown(html_content2, unsafe_allow_html=True)
 
 
-with tab4:
-    1
+    with tab4:
+        st.title('Termine für zum Gumb hochladen')
+        what = st.selectbox('Gumb', ['Trainings', 'Spiele'], label_visibility='collapsed')
+
+        if what == 'Trainings':
+            times = [[None, None] for w in weekdays]
+            hallen = [None for w in weekdays]
+            sel_saisons = st.multiselect(f"saisons", Saisons.keys(), label_visibility="collapsed")
+            for n, weekday in enumerate(weekdays):
+                col1, col2, col3, col4 = st.columns([20, 27, 27, 27])  # You can adjust the width ratio
+
+                with col1:
+                    st.markdown(f"**{weekday}**")  # Or dynamically use a weekday name
+
+                with col2:
+                    times[n][0] = st.time_input(f"Start_{weekday}", value=time(17, 30),
+                                                label_visibility="collapsed").strftime('%H:%M')
+
+                with col3:
+                    times[n][1] = st.time_input(f"End_{weekday}", value=time(19, 0),
+                                                label_visibility="collapsed").strftime('%H:%M')
+
+                with col4:
+                    hallen[n] = st.selectbox(f"Halle_{weekday}", Hallen, label_visibility="collapsed")
+
+
+            if st.button("CSV erstellen"):
+                csv_data = get_Gumb(
+                    'Gumb_Vorlage.xlsx',
+                    sel_saisons,
+                    weekdays=weekdays,
+                    locations=hallen,
+                    Zeiten=times
+                )
+                st.success("CSV wurde erstellt!")
+
+                st.download_button(
+                    label="Download CSV",
+                    data=csv_data,
+                    file_name=f'Gumb_upload.csv',
+                    mime='text/csv'
+                )
+
 
 
     with tab5:

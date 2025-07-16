@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import streamlit as st
 from github import Github
 from io import StringIO
+import csv
 from icalendar import Calendar
 import math
 import re
@@ -327,7 +328,13 @@ def get_Gumb(excel_file, Saisons, weekdays=['Mittwoch', 'Freitag'],
                 location = locations[n]
                 Zeit = Zeiten[n]
         df.loc[len(df)] = ['Training ' + location, 'Training', location, d.strftime('%d.%m.%Y'), Zeit[0], Zeit[1], '']
-    df.to_csv(excel_file[:-4] + 'csv', index=False)
+    output = StringIO()
+    fieldnames = df.columns.tolist()
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+    writer.writeheader()
+    writer.writerows(df.to_dict(orient="records"))
+    return output.getvalue()
 
 def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
     parts = summary.split(" - ")
@@ -397,9 +404,13 @@ def get_Matches(ics_file, excel_file, team='U13_A'):
 
 
 if __name__ == '__main__':
-    make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
+    # make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
-    # get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
+    csv_string = get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
+    csvname = 'Gumb_output.csv'
+    with open(csvname, "w", newline='', encoding='utf-8') as f:
+        f.write(csv_string)
+
     # get_Matches(
     #     'D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics',
     #     'D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx'
