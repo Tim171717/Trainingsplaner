@@ -384,6 +384,7 @@ if st.session_state.get('loggedin', False):
     with tab4:
         st.title('Termine für zum Gumb hochladen')
         what = st.selectbox('Gumb', ['Trainings', 'Spiele'], label_visibility='collapsed')
+        st.divider()
 
         if what == 'Trainings':
             times = [[None, None] for w in weekdays]
