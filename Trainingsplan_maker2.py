@@ -314,7 +314,8 @@ def plot_plan(Team, Saison):
     plt.tight_layout()
     return fig
 
-def get_Gumb(excel_file, Saisons, weekdays, locations=['Goldau', 'Brunnen']):
+def get_Gumb(excel_file, Saisons, weekdays=['Mittwoch', 'Freitag'],
+             locations=['Goldau', 'Brunnen'], Zeiten=[['17:30', '19:00'], ['17:30', '19:00']]):
     df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
     dates = []
     for s in Saisons:
@@ -324,7 +325,8 @@ def get_Gumb(excel_file, Saisons, weekdays, locations=['Goldau', 'Brunnen']):
         for n, weekday in enumerate(weekdays):
             if d.weekday() == weeknum[weekday]:
                 location = locations[n]
-        df.loc[len(df)] = ['Training ' + location, 'Training', location, d.strftime('%d.%m.%Y'), '17:30', '19:00', '']
+                Zeit = Zeiten[n]
+        df.loc[len(df)] = ['Training ' + location, 'Training', location, d.strftime('%d.%m.%Y'), Zeit[0], Zeit[1], '']
     df.to_csv(excel_file[:-4] + 'csv', index=False)
 
 def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
@@ -341,7 +343,7 @@ def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
         return False, None
 
 def get_traveltime(arena, startpoint='Goldau Berufsbildungszentrum'):
-    API_KEY = 'AIzaSyCKg6kl-gZVTUCFOTS70ERXGw67_56bK6E'
+    API_KEY = st.secrets["google_apikey"]
     gmaps = googlemaps.Client(key=API_KEY)
 
     origins = [startpoint]
@@ -397,8 +399,8 @@ def get_Matches(ics_file, excel_file, team='U13_A'):
 if __name__ == '__main__':
     # make_plan('2526HR', datetime.strptime('2025-05-11', "%Y-%m-%d"), 'U13A')
 
-    # get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'], ['Mittwoch', 'Freitag'])
-    get_Matches(
-        'D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics',
-        'D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx'
-    )
+    get_Gumb('D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx', ['2526HR', '2526RR'])
+    # get_Matches(
+    #     'D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics',
+    #     'D:/timlf/Tim Daten/Downloads/U13 Mythen Shooters.xlsx'
+    # )
