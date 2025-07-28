@@ -15,8 +15,6 @@ import csv
 from icalendar import Calendar
 import googlemaps
 import matplotlib as mpl
-import locale
-locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
 
 g = Github(st.secrets["github_token"])
 repo = g.get_repo("Tim171717/Trainingsplaner")
