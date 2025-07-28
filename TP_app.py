@@ -382,14 +382,51 @@ if st.session_state.get('loggedin', False):
 
 
     with tab4:
-        st.title('Termine für zum Gumb hochladen')
-        what = st.selectbox('Gumb', ['Trainings', 'Spiele'], label_visibility='collapsed')
-        st.divider()
+        st.title('Termine ins Gumb hochladen')
+        tab4a, tab4b = st.tabs(['Spiele', 'Trainings'])
 
-        if what == 'Trainings':
+        with tab4a:
+            uploaded_icsfile = st.file_uploader("Terminplan von Handball.ch hochladen", type="ics")
+            treffpunkt = st.selectbox(f"Treffpunkt", Hallen.keys())
+            teamname = st.checkbox('Teamname im Titel')
+            druck = st.checkbox('Fahrerliste als Druckversion')
+
+            if st.button("CSV erstellen "):
+                cal = Calendar.from_ical(uploaded_icsfile.read())
+                with st.spinner('Wart mal churz'):
+                    csv_data, fahrerliste = get_Matches(
+                        cal,
+                        team=Team,
+                        startpoint=Hallen[treffpunkt],
+                        show_teamname=teamname,
+                        printversion = druck
+                    )
+                st.session_state["spiele_made"] = True
+                st.session_state["csv_data"] = csv_data
+                st.session_state["fahrerliste"] = fahrerliste
+
+            if st.session_state.get("spiele_made", False):
+                st.success("CSV und Fahrerliste wurden erstellt!")
+
+                st.download_button(
+                    label="Gumb-Upload",
+                    data=st.session_state["csv_data"],
+                    file_name=f'Gumb_upload.csv',
+                    mime='text/csv'
+                )
+
+                st.download_button(
+                    label="Fahrerliste",
+                    data=st.session_state["fahrerliste"],
+                    file_name=f'Fahrerliste_' + Team + '.pdf',
+                    mime='text/csv'
+                )
+
+
+        with tab4b:
             times = [[None, None] for w in weekdays]
             hallen = [None for w in weekdays]
-            sel_saisons = st.multiselect(f"saisons", Saisons.keys(), label_visibility="collapsed")
+            sel_saisons = st.multiselect(f"Saisons", Saisons.keys(), label_visibility="collapsed")
             for n, weekday in enumerate(weekdays):
                 col1, col2, col3, col4 = st.columns([20, 27, 27, 27])  # You can adjust the width ratio
 
@@ -407,7 +444,6 @@ if st.session_state.get('loggedin', False):
                 with col4:
                     hallen[n] = st.selectbox(f"Halle_{weekday}", Hallen.keys(), label_visibility="collapsed")
 
-
             if st.button("CSV erstellen"):
                 csv_data = get_Gumb(
                     'Gumb_Vorlage.xlsx',
@@ -415,28 +451,6 @@ if st.session_state.get('loggedin', False):
                     weekdays=weekdays,
                     locations=hallen,
                     Zeiten=times
-                )
-                st.success("CSV wurde erstellt!")
-
-                st.download_button(
-                    label="Download CSV",
-                    data=csv_data,
-                    file_name=f'Gumb_upload.csv',
-                    mime='text/csv'
-                )
-
-        else:
-            treffpunkt = st.selectbox(f"Treffpunkt", Hallen.keys())
-            uploaded_icsfile = st.file_uploader("Terminplan von Handball.ch hochladen", type="ics")
-            Type = st.selectbox(f'type', ['spiel', 'turnier'])
-
-            if st.button("CSV erstellen"):
-                cal = Calendar.from_ical(uploaded_icsfile.read())
-                csv_data = get_Matches(
-                    cal,
-                    team=Team,
-                    startpoint=Hallen[treffpunkt],
-                    type=Type,
                 )
                 st.success("CSV wurde erstellt!")
 

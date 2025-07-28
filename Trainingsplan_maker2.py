@@ -14,6 +14,9 @@ from io import StringIO, BytesIO
 import csv
 from icalendar import Calendar
 import googlemaps
+import matplotlib as mpl
+import locale
+locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
 
 g = Github(st.secrets["github_token"])
 repo = g.get_repo("Tim171717/Trainingsplaner")
@@ -336,19 +339,14 @@ def get_Gumb(excel_file, Saisons, weekdays=['Mittwoch', 'Freitag'],
     writer.writerows(df.to_dict(orient="records"))
     return output.getvalue()
 
-def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
+def parse_summary(summary, my_club="HSG Mythen"):
     parts = summary.split(" - ")
     if len(parts) < 3:
         return "Unknown", None
     gameid = parts[0]
     home_team = parts[1]
     away_team = parts[2]
-    if home_team[:10] == 'HSG Mythen':
-        return True, away_team, gameid
-    elif away_team == away_team:
-        return False, home_team, gameid
-    else:
-        return False, None, None
+    return [gameid, home_team[:len(my_club)] == my_club, home_team, away_team]
 
 def get_traveltime(arena, startpoint):
     API_KEY = st.secrets["google_apikey"]
@@ -375,7 +373,46 @@ def get_traveltime(arena, startpoint):
     rounded_minutes = math.ceil(total_minutes / 15) * 15
     return timedelta(minutes=rounded_minutes)
 
-def get_matchdata(cal):
+def mergecells(table, ix0, ix1):
+    ix0, ix1 = np.asarray(ix0), np.asarray(ix1)
+    d = ix1 - ix0
+    if not (0 in d and 1 in np.abs(d)):
+        raise ValueError("ix0 and ix1 should be the indices of adjacent cells. ix0: %s, ix1: %s" % (ix0, ix1))
+
+    if d[0] == -1:
+        edges = ('BRL', 'TRL')
+    elif d[0] == 1:
+        edges = ('TRL', 'BRL')
+    elif d[1] == -1:
+        edges = ('BTR', 'BTL')
+    else:
+        edges = ('BTL', 'BTR')
+
+    # hide the merged edges
+    for ix, e in zip((ix0, ix1), edges):
+        table[ix[0], ix[1]].visible_edges = e
+
+    txts = [table[ix[0], ix[1]].get_text() for ix in (ix0, ix1)]
+    tpos = [np.array(t.get_position()) for t in txts]
+
+    # center the text of the 0th cell between the two merged cells
+    trans = (tpos[1] - tpos[0]) / 2
+    if trans[0] > 0 and txts[0].get_ha() == 'right':
+        # reduce the transform distance in order to center the text
+        trans[0] /= 2
+    elif trans[0] < 0 and txts[0].get_ha() == 'right':
+        # increase the transform distance...
+        trans[0] *= 2
+
+    txts[0].set_transform(mpl.transforms.Affine2D().translate(*trans))
+
+    # hide the text in the 1st cell
+    txts[1].set_visible(False)
+
+def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum',
+                show_teamname=True, printversion=False):
+    df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
+
     spiele = []
     for component in cal.walk():
         if component.name == "VEVENT":
@@ -384,107 +421,136 @@ def get_matchdata(cal):
             end = component.get('dtend').dt
             location = component.get('location')
             if location == 'Einsiedeln Brühl': location = 'Einsiedeln Brüel'
-            spiele.append([start, end, summary, location])
-    return spiele
+            curr = parse_summary(summary) + [start, end, location]
+            spiele.append(curr)
 
-def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum', type='spiel'):
-    df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
-    spiele = get_matchdata(cal)
-
-    for s in spiele:
-        home, opponent, _ = parse_summary(s[2])
-        if home:
-            df.loc[len(df)] = [team + ' Heim' + type + ' gegen ' + opponent, 'Heim' + type, s[3], s[0].strftime('%d.%m.%Y'),
-                               (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
-                               'Anpfiff: ' + s[0].strftime('%H:%M')]
+    spielgroups = list(set([s[0] for s in spiele]))
+    newspiele = []
+    for group in spielgroups:
+        games = [s for s in spiele if s[0] == group]
+        if len(games) == 1:
+            newspiele.append(games[1:] + [True])
         else:
-            traveltime = get_traveltime(s[3], startpoint)
-            df.loc[len(df)] = [team + ' Auswärts' + type + ' gegen ' + opponent, 'Auswärts' + type, s[3],
-                               s[0].strftime('%d.%m.%Y'), (s[0] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
-                               'Anpfiff: ' + s[0].strftime('%H:%M')]
+            dates = list(set([g[4].date() for g in games]))
+            if len(dates) == 1:
+                starttime = min([g[4] for g in games])
+                endtime = max([g[5] for g in games])
+                location = games[0][6].split()[0]
+                home = location in ['Goldau', 'Brunnen', 'Schwyz']
+                newspiele.append([home, location, None, starttime, endtime, games[0][6], False])
+            else:
+                for g in games:
+                    newspiele.append(g[1:] + [True])
+    newspiele = sorted(newspiele, key=lambda x: x[4])
+    data = []
+    home = []
+    turnier = []
+    for s in newspiele:
+        if s[-1]:
+            data.append([s[3].strftime('%a | %d.%m.%Y'), s[3].strftime('%H:%M'),
+                         (s[3] - timedelta(hours=1)).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
+            turnier.append(False)
+            if s[0]:
+                df.loc[len(df)] = [(team + ' ') * show_teamname + 'Heimspiel gegen ' + s[2], 'Heimspiel', s[5],
+                                   s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1)).strftime('%H:%M'),
+                                   s[4].strftime('%H:%M'), 'Anpfiff: ' + s[3].strftime('%H:%M')]
+                home.append(True)
+            else:
+                traveltime = get_traveltime(s[5], startpoint)
+                df.loc[len(df)] = [(team + ' ') * show_teamname + 'Auswärtsspiel gegen ' + s[1], 'Auswärtsspiel', s[5],
+                                   s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
+                                   s[4].strftime('%H:%M'), 'Anpfiff: ' + s[3].strftime('%H:%M')]
+                home.append(False)
+        else:
+            turnier.append(True)
+            if s[0]:
+                df.loc[len(df)] = [(team + ' ') * show_teamname + 'Heimturnier in ' + s[1], 'Heimturnier', s[5],
+                                   s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1)).strftime('%H:%M'),
+                                   s[4].strftime('%H:%M'), '']
+                data.append([s[3].strftime('%a | %d.%m.%Y'), s[3].strftime('%H:%M'),
+                             (s[3] - timedelta(hours=1)).strftime('%H:%M'), 'Heimturnier', '', s[5], "", ""])
+                home.append(True)
+            else:
+                traveltime = get_traveltime(s[5], startpoint)
+                df.loc[len(df)] = [(team + ' ') * show_teamname + 'Auswärtsturnier in ' + s[1], 'Auswärtsturnier', s[5],
+                                   s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
+                                   s[4].strftime('%H:%M'), '']
+                data.append([s[3].strftime('%a | %d.%m.%Y'), s[3].strftime('%H:%M'),
+                             (s[3] - timedelta(hours=1)).strftime('%H:%M'), 'Auswärtsturnier', '', s[5], "", ""])
+                home.append(False)
 
     output = StringIO()
     fieldnames = df.columns.tolist()
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(df.to_dict(orient="records"))
-    return output.getvalue()
+    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion)
 
-def Fahrerliste(cal, dotwo=False):
-    spiele = get_matchdata(cal)
-    data = []
-    for s in spiele:
-        home, opponent, _ = parse_summary(s[2])
-        if home:
-            df.loc[len(df)] = [team + ' Heim' + type + ' gegen ' + opponent, 'Heim' + type, s[3], s[0].strftime('%d.%m.%Y'),
-                               (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
-                               'Anpfiff: ' + s[0].strftime('%H:%M')]
-        else:
-            traveltime = get_traveltime(s[3], startpoint)
-            df.loc[len(df)] = [team + ' Auswärts' + type + ' gegen ' + opponent, 'Auswärts' + type, s[3],
-                               s[0].strftime('%d.%m.%Y'), (s[0] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
-                               'Anpfiff: ' + s[0].strftime('%H:%M')]
-
-
-    data = [
-        ["Sa | 06.09.25", "10:00", "08:15", "SG Züri Oberland", "HSG Mythen Shooters 1", "Pfäffikon ZH Mettlen", "",
-         ""],
-        ["So | 14.09.25", "10:00", "09:00", "HSG Mythen Shooters 1", "SG THW Handball 2", "Brunnen Sporthalle", "", ""],
-        ["So | 21.09.25", "10:00", "08:00", "SG Lachen/Höfe", "HSG Mythen Shooters 1", "Buttikon Sek 1 March", "", ""],
-        ["So | 19.10.25", "10:00", "08:15", "HC Einsiedeln", "HSG Mythen Shooters 1", "Einsiedeln Brüel", "", ""],
-        ["Sa | 01.11.25", "17:00", "16:00", "HSG Mythen Shooters 1", "HC Einsiedeln",
-         "Goldau Berufsbildungszentrum (BBZG)", "", ""],
-        ["So | 09.11.25", "12:00", "11:00", "HSG Mythen Shooters 1", "SG Züri Oberland",
-         "Goldau Berufsbildungszentrum (BBZG)", "", ""],
-        ["Sa | 15.11.25", "14:30", "12:45", "SG THW Handball 2", "HSG Mythen Shooters 1", "Thalwil Sonnenberg", "", ""],
-        ["So | 23.11.25", "12:00", "11:00", "HSG Mythen Shooters 1", "SG Lachen/Höfe", "Brunnen Sporthalle", "", ""]
-    ]
-    home = [False, True, False, False, True, True, False, True]
-
-    columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", "Heim", "Gast", "Halle", "Fahren\n(Anzahl Plätze\nohne Fahrer)",
-               "Trikots\nwaschen"]
-    df = pd.DataFrame(data, columns=columns)
+def Fahrerliste(data, home, Turnier, dotwo=False):
+    if False in Turnier:
+        columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", "Heim", "Gast", "Halle",
+                   "Fahren\n(Anzahl Plätze\nohne Fahrer)", "Trikots\nwaschen"]
+        df = pd.DataFrame(data, columns=columns)
+        col_widths = {
+            0: 0.09,  # Datum
+            1: 0.085,  # Zeit
+            2: 0.085,  # Besammlung
+            3: 0.17,  # Heim
+            4: 0.17,  # Gast
+            5: 0.22,  # Halle
+            6: 0.1,  # Fahren
+            7: 0.08  # Trikots
+        }
+        fahrenloc = 6
+    else:
+        columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", 'Turnier', "Halle", "Fahren\n(Anzahl Plätze\nohne Fahrer)",
+                   "Trikots\nwaschen"]
+        df = pd.DataFrame([[d[0], d[1], d[2], d[3], d[5], d[6], d[7]] for d in data], columns=columns)
+        col_widths = {
+            0: 0.09,  # Datum
+            1: 0.085,  # Zeit
+            2: 0.085,  # Besammlung
+            3: 0.16,  # Turnier
+            4: 0.26,  # Halle
+            5: 0.1,  # Fahren
+            6: 0.08  # Trikots
+        }
+        fahrenloc = 5
 
     fig, ax = plt.subplots(figsize=(14, 5))
     ax.axis('off')
     table = ax.table(cellText=df.values, colLabels=df.columns, loc='center', cellLoc='center')
 
     table.auto_set_font_size(False)
-    table.set_fontsize(11)
+    table.set_fontsize(10)
 
     table.scale(1, 1.5)
-
-    col_widths = {
-        0: 0.08,  # Datum
-        1: 0.085,  # Zeit
-        2: 0.085,  # Besammlung
-        3: 0.14,  # Heim
-        4: 0.14,  # Gast
-        5: 0.22,  # Halle
-        6: 0.1,  # Fahren
-        7: 0.08  # Trikots
-    }
-
     for (row, col), cell in table.get_celld().items():
         if col in col_widths:
             cell.set_width(col_widths[col])
         if row == 0:
-            cell.set_fontsize(11)
+            cell.set_fontsize(10)
             cell.set_text_props(weight='bold')
             cell.set_facecolor("#f2f2f2")
             cell.set_height(0.14)
-        if col == 6 and row > 0 and home[row - 1]:
+        if col == fahrenloc and row > 0 and home[row - 1]:
             cell.set_facecolor("black")
             cell.set_text_props(color="white")
-        if cell.get_text().get_text() == "HSG Mythen Shooters 1":
-            cell.set_text_props(weight='bold')
+        if row > 0 and not Turnier[row - 1]:
+            if col == 3 and row > 0 and home[row - 1]:
+                cell.set_text_props(weight='bold')
+            if col == 4 and row > 0 and not home[row - 1]:
+                cell.set_text_props(weight='bold')
+        if row > 0 and col == 3 and False in Turnier:
+            if Turnier[row - 1]:
+                mergecells(table, (row, 3), (row, 4))
+                cell.set_text_props(weight='bold')
 
     plt.title("Name:", fontsize=14, weight='bold', pad=-20, loc='left')
     img_buf = BytesIO()
     plt.tight_layout()
     plt.savefig(img_buf, format='png', dpi=600)
     img_buf.seek(0)
-    plt.show()
 
     img_buf.seek(0)
     img = mpimg.imread(img_buf)
@@ -496,9 +562,11 @@ def Fahrerliste(cal, dotwo=False):
         fig, ax1 = plt.subplots(figsize=(11.69, 8.27))
     ax1.axis('off')
     ax1.imshow(img)
+    buf = BytesIO()
     plt.tight_layout()
-    plt.savefig("image_on_a4.pdf", dpi=600, format="pdf")
-    plt.show()
+    plt.savefig(buf, format='pdf', dpi=600)
+    buf.seek(0)
+    return buf.getvalue()
 
 
 if __name__ == '__main__':
