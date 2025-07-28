@@ -1,24 +1,25 @@
 import numpy as np
 import pandas as pd
-import os
+import math
 import re
+import os
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import ast
 import random
 from datetime import datetime, timedelta
 import streamlit as st
 from github import Github
-from io import StringIO
+from io import StringIO, BytesIO
 import csv
 from icalendar import Calendar
-import math
-import re
 import googlemaps
 
 g = Github(st.secrets["github_token"])
 repo = g.get_repo("Tim171717/Trainingsplaner")
 
 weeknum = {'Montag': 0, 'Dienstag': 1, 'Mittwoch': 2, 'Donnerstag': 3, 'Freitag': 4, 'Samstag': 5, 'Sonntag': 6}
+weekday_map = {"Mon": "Mo", "Tue": "Di", "Wed": "Mi", "Thu": "Do", "Fri": "Fr", "Sat": "Sa", "Sun": "So"}
 
 def catnum(directory):
     pattern = re.compile(r'^Cat(\d+)\.csv$')
@@ -339,14 +340,15 @@ def parse_summary(summary, my_team="HSG Mythen Shooters 1"):
     parts = summary.split(" - ")
     if len(parts) < 3:
         return "Unknown", None
+    gameid = parts[0]
     home_team = parts[1]
     away_team = parts[2]
-    if my_team == home_team:
-        return True, away_team
-    elif my_team == away_team:
-        return False, home_team
+    if home_team[:10] == 'HSG Mythen':
+        return True, away_team, gameid
+    elif away_team == away_team:
+        return False, home_team, gameid
     else:
-        return False, None
+        return False, None, None
 
 def get_traveltime(arena, startpoint):
     API_KEY = st.secrets["google_apikey"]
@@ -373,8 +375,7 @@ def get_traveltime(arena, startpoint):
     rounded_minutes = math.ceil(total_minutes / 15) * 15
     return timedelta(minutes=rounded_minutes)
 
-def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum', type='spiel'):
-    df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
+def get_matchdata(cal):
     spiele = []
     for component in cal.walk():
         if component.name == "VEVENT":
@@ -384,9 +385,14 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
             location = component.get('location')
             if location == 'Einsiedeln Brühl': location = 'Einsiedeln Brüel'
             spiele.append([start, end, summary, location])
+    return spiele
+
+def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum', type='spiel'):
+    df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
+    spiele = get_matchdata(cal)
 
     for s in spiele:
-        home, opponent = parse_summary(s[2])
+        home, opponent, _ = parse_summary(s[2])
         if home:
             df.loc[len(df)] = [team + ' Heim' + type + ' gegen ' + opponent, 'Heim' + type, s[3], s[0].strftime('%d.%m.%Y'),
                                (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
@@ -403,6 +409,96 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     writer.writeheader()
     writer.writerows(df.to_dict(orient="records"))
     return output.getvalue()
+
+def Fahrerliste(cal, dotwo=False):
+    spiele = get_matchdata(cal)
+    data = []
+    for s in spiele:
+        home, opponent, _ = parse_summary(s[2])
+        if home:
+            df.loc[len(df)] = [team + ' Heim' + type + ' gegen ' + opponent, 'Heim' + type, s[3], s[0].strftime('%d.%m.%Y'),
+                               (s[0] - timedelta(hours=1)).strftime('%H:%M'), s[1].strftime('%H:%M'),
+                               'Anpfiff: ' + s[0].strftime('%H:%M')]
+        else:
+            traveltime = get_traveltime(s[3], startpoint)
+            df.loc[len(df)] = [team + ' Auswärts' + type + ' gegen ' + opponent, 'Auswärts' + type, s[3],
+                               s[0].strftime('%d.%m.%Y'), (s[0] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1].strftime('%H:%M'),
+                               'Anpfiff: ' + s[0].strftime('%H:%M')]
+
+
+    data = [
+        ["Sa | 06.09.25", "10:00", "08:15", "SG Züri Oberland", "HSG Mythen Shooters 1", "Pfäffikon ZH Mettlen", "",
+         ""],
+        ["So | 14.09.25", "10:00", "09:00", "HSG Mythen Shooters 1", "SG THW Handball 2", "Brunnen Sporthalle", "", ""],
+        ["So | 21.09.25", "10:00", "08:00", "SG Lachen/Höfe", "HSG Mythen Shooters 1", "Buttikon Sek 1 March", "", ""],
+        ["So | 19.10.25", "10:00", "08:15", "HC Einsiedeln", "HSG Mythen Shooters 1", "Einsiedeln Brüel", "", ""],
+        ["Sa | 01.11.25", "17:00", "16:00", "HSG Mythen Shooters 1", "HC Einsiedeln",
+         "Goldau Berufsbildungszentrum (BBZG)", "", ""],
+        ["So | 09.11.25", "12:00", "11:00", "HSG Mythen Shooters 1", "SG Züri Oberland",
+         "Goldau Berufsbildungszentrum (BBZG)", "", ""],
+        ["Sa | 15.11.25", "14:30", "12:45", "SG THW Handball 2", "HSG Mythen Shooters 1", "Thalwil Sonnenberg", "", ""],
+        ["So | 23.11.25", "12:00", "11:00", "HSG Mythen Shooters 1", "SG Lachen/Höfe", "Brunnen Sporthalle", "", ""]
+    ]
+    home = [False, True, False, False, True, True, False, True]
+
+    columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", "Heim", "Gast", "Halle", "Fahren\n(Anzahl Plätze\nohne Fahrer)",
+               "Trikots\nwaschen"]
+    df = pd.DataFrame(data, columns=columns)
+
+    fig, ax = plt.subplots(figsize=(14, 5))
+    ax.axis('off')
+    table = ax.table(cellText=df.values, colLabels=df.columns, loc='center', cellLoc='center')
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+
+    table.scale(1, 1.5)
+
+    col_widths = {
+        0: 0.08,  # Datum
+        1: 0.085,  # Zeit
+        2: 0.085,  # Besammlung
+        3: 0.14,  # Heim
+        4: 0.14,  # Gast
+        5: 0.22,  # Halle
+        6: 0.1,  # Fahren
+        7: 0.08  # Trikots
+    }
+
+    for (row, col), cell in table.get_celld().items():
+        if col in col_widths:
+            cell.set_width(col_widths[col])
+        if row == 0:
+            cell.set_fontsize(11)
+            cell.set_text_props(weight='bold')
+            cell.set_facecolor("#f2f2f2")
+            cell.set_height(0.14)
+        if col == 6 and row > 0 and home[row - 1]:
+            cell.set_facecolor("black")
+            cell.set_text_props(color="white")
+        if cell.get_text().get_text() == "HSG Mythen Shooters 1":
+            cell.set_text_props(weight='bold')
+
+    plt.title("Name:", fontsize=14, weight='bold', pad=-20, loc='left')
+    img_buf = BytesIO()
+    plt.tight_layout()
+    plt.savefig(img_buf, format='png', dpi=600)
+    img_buf.seek(0)
+    plt.show()
+
+    img_buf.seek(0)
+    img = mpimg.imread(img_buf)
+    if dotwo:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.27, 11.69))
+        ax2.axis('off')
+        ax2.imshow(img)
+    else:
+        fig, ax1 = plt.subplots(figsize=(11.69, 8.27))
+    ax1.axis('off')
+    ax1.imshow(img)
+    plt.tight_layout()
+    plt.savefig("image_on_a4.pdf", dpi=600, format="pdf")
+    plt.show()
 
 
 if __name__ == '__main__':
