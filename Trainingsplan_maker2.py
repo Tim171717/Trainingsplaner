@@ -23,6 +23,7 @@ repo = g.get_repo("Tim171717/Trainingsplaner")
 
 weeknum = {'Montag': 0, 'Dienstag': 1, 'Mittwoch': 2, 'Donnerstag': 3, 'Freitag': 4, 'Samstag': 5, 'Sonntag': 6}
 weekday_map = {"Mon": "Mo", "Tue": "Di", "Wed": "Mi", "Thu": "Do", "Fri": "Fr", "Sat": "Sa", "Sun": "So"}
+weekdays_de = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
 def catnum(directory):
     pattern = re.compile(r'^Cat(\d+)\.csv$')
@@ -409,6 +410,10 @@ def mergecells(table, ix0, ix1):
     # hide the text in the 1st cell
     txts[1].set_visible(False)
 
+def format_german_date(dt):
+    weekday = weekdays_de[dt.weekday()]  # Monday=0, Sunday=6
+    return f'{weekday} | {dt.strftime("%d.%m.%Y")}'
+
 def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum',
                 show_teamname=True, printversion=False):
     df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
@@ -447,7 +452,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     turnier = []
     for s in newspiele:
         if s[-1]:
-            data.append([s[3].strftime('%a | %d.%m.%Y'), s[3].strftime('%H:%M'),
+            data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
                          (s[3] - timedelta(hours=1)).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
             turnier.append(False)
             if s[0]:
@@ -467,7 +472,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                 df.loc[len(df)] = [(team + ' ') * show_teamname + 'Heimturnier in ' + s[1], 'Heimturnier', s[5],
                                    s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1)).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), '']
-                data.append([s[3].strftime('%a | %d.%m.%Y'), s[3].strftime('%H:%M'),
+                data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
                              (s[3] - timedelta(hours=1)).strftime('%H:%M'), 'Heimturnier', '', s[5], "", ""])
                 home.append(True)
             else:
@@ -475,7 +480,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                 df.loc[len(df)] = [(team + ' ') * show_teamname + 'Auswärtsturnier in ' + s[1], 'Auswärtsturnier', s[5],
                                    s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), '']
-                data.append([s[3].strftime('%a | %d.%m.%Y'), s[3].strftime('%H:%M'),
+                data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
                              (s[3] - timedelta(hours=1)).strftime('%H:%M'), 'Auswärtsturnier', '', s[5], "", ""])
                 home.append(False)
 
