@@ -261,7 +261,7 @@ if st.session_state.get('loggedin', False):
         plan_name = 'Plan_' + Team + '_' + Saison + '.png'
 
         st.download_button(
-            label="Download Plot as PNG",
+            label="Download Plot als PNG",
             data=buf,
             file_name=plan_name,
             mime="image/png"
