@@ -419,7 +419,7 @@ if st.session_state.get('loggedin', False):
                     label="Fahrerliste",
                     data=st.session_state["fahrerliste"],
                     file_name=f'Fahrerliste_' + Team + '.pdf',
-                    mime='text/csv'
+                    mime='application/pdf'
                 )
 
 
