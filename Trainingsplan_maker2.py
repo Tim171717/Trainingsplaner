@@ -487,7 +487,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(df.to_dict(orient="records"))
-    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion)
+    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion), Baspo_output(data)
 
 def Fahrerliste(data, home, Turnier, dotwo=False):
     if False in Turnier:
@@ -570,6 +570,10 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
     plt.savefig(buf, format='pdf', dpi=600)
     buf.seek(0)
     return buf.getvalue()
+
+def Baspo_output(data):
+    dfba = pd.read_csv('Baspo_vorlage.csv', sep=';')
+
 
 
 if __name__ == '__main__':
