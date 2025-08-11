@@ -487,7 +487,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(df.to_dict(orient="records"))
-    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion), Baspo_output(data)
+    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion), #Baspo_output(newspiele)
 
 def Fahrerliste(data, home, Turnier, dotwo=False):
     if False in Turnier:
@@ -571,9 +571,21 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
     buf.seek(0)
     return buf.getvalue()
 
-def Baspo_output(data):
+def Baspo_output(spiele):
     dfba = pd.read_csv('Baspo_vorlage.csv', sep=';')
-
+    for s in spiele:
+        dfba.loc[len(dfba)] = ['Wettkampf',
+                               s[3].strftime("%d.%m.%Y"),
+                               s[3].strftime("%H:%M"),
+                               int((s[4]-s[3]).total_seconds()//60),
+                               s[5],
+                               '']
+    output = StringIO()
+    fieldnames = dfba.columns.tolist()
+    writer = csv.DictWriter(output, fieldnames=fieldnames, delimiter=';')
+    writer.writeheader()
+    writer.writerows(dfba.to_dict(orient="records"))
+    return output.getvalue()
 
 
 if __name__ == '__main__':
@@ -586,7 +598,7 @@ if __name__ == '__main__':
 
     with open('D:/timlf/Tim Daten/Downloads/spielplan-hsg-mythen-shooters-1.ics', 'rb') as f:
         cal = Calendar.from_ical(f.read())
-    csv_string = get_Matches(cal)
-    csvname = 'Gumb_output.csv'
+    _, _, csvdata = get_Matches(cal)
+    csvname = 'baspo_output.csv'
     with open(csvname, "w", newline='', encoding='utf-8') as f:
-        f.write(csv_string)
+        f.write(csvdata)
