@@ -20,34 +20,34 @@ date,selection,category,catalog
 2025-08-13,"['Prellen ', 'Zweierpassen übers ganze Feld', 'Vom 2:1 zum 4:3 ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
 2025-08-15,"['Täuschen/Durchbrechen (ohne/mit Ball)', 'Herausspielen des Balles', 'Viereck passen - drei mal prellen für Punkt']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
 2025-08-20,"['Sprungwurf hoch/weit', 'Parallelpassen', '5er Passen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-08-22,"['Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', 'Sprungwurf duell', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-08-27,"['Kernwurf-Variationen mit 1-3 Schritten', 'Rennen zum Ball', 'Ball auf Kasten abschiessen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-08-29,"['Duell um die Welt', 'Tschechenviereck', 'Ablaufen mit/ohne Ball ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-03,"['Täuschungen Nullkontakt li/re; re/li mit Ball ', 'Abdrängen des Gegners ', 'Abwehrverhalten ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-05,"['Prellen ', 'Zweierpassen übers ganze Feld', '1:1 - 4:4 Gleichzahl mit und ohne Kreisläufer (mit zwei Anspielstationen) ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-10,"['Abwehrtechnik/Beinarbeit ', 'Einpassen auf Bänkli', 'Gegenstoss 2:1 zum 3:2']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-12,"['Sprungwurf hoch/weit', 'Täuschen/Durchbrechen (ohne/mit Ball)', 'Ball in Kreis ablegen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-17,"['Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', 'Sprungwurf duell', 'Kreis anspielen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-19,"['Kernwurf-Variationen mit 1-3 Schritten', 'Herausspielen des Balles', '5er Passen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-24,"['Parallelpassen', 'Tschechenviereck', 'Vom 2:1 zum 4:3 ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-09-26,"['Täuschungen Nullkontakt li/re; re/li mit Ball ', 'Abdrängen des Gegners ', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-10-15,"['Prellen ', 'Zweierpassen übers ganze Feld', 'Ablaufen mit/ohne Ball ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-10-17,"['Abwehrtechnik/Beinarbeit ', 'Duell um die Welt', 'Abwehrverhalten ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-10-22,"['Täuschen/Durchbrechen (ohne/mit Ball)', 'Einpassen auf Bänkli', 'Ball auf Kasten abschiessen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-10-24,"['Sprungwurf hoch/weit', 'Rennen zum Ball', 'Viereck passen - drei mal prellen für Punkt']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-10-29,"['Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', 'Herausspielen des Balles', '1:1 - 4:4 Gleichzahl mit und ohne Kreisläufer (mit zwei Anspielstationen) ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-10-31,"['Kernwurf-Variationen mit 1-3 Schritten', 'Tschechenviereck', 'Kreis anspielen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-05,"['Abdrängen des Gegners ', 'Sprungwurf duell', 'Gegenstoss 2:1 zum 3:2']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-07,"['Prellen ', 'Parallelpassen', 'Vom 2:1 zum 4:3 ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-12,"['Abwehrtechnik/Beinarbeit ', 'Zweierpassen übers ganze Feld', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-14,"['Duell um die Welt', 'Einpassen auf Bänkli', 'Ablaufen mit/ohne Ball ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-19,"['Täuschen/Durchbrechen (ohne/mit Ball)', 'Rennen zum Ball', 'Ball in Kreis ablegen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-21,"['Sprungwurf hoch/weit', 'Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', '5er Passen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-26,"['Herausspielen des Balles', 'Tschechenviereck', 'Ball auf Kasten abschiessen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-11-28,"['Kernwurf-Variationen mit 1-3 Schritten', 'Sprungwurf duell', '1:1 - 4:4 Gleichzahl mit und ohne Kreisläufer (mit zwei Anspielstationen) ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-12-03,"['Abdrängen des Gegners ', 'Parallelpassen', 'Kreis anspielen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-12-05,"['Täuschungen Nullkontakt li/re; re/li mit Ball ', 'Zweierpassen übers ganze Feld', 'Gegenstoss 2:1 zum 3:2']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-12-10,"['Duell um die Welt', 'Einpassen auf Bänkli', 'Abwehrverhalten ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-12-12,"['Täuschen/Durchbrechen (ohne/mit Ball)', 'Rennen zum Ball', 'Viereck passen - drei mal prellen für Punkt']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-12-17,"['Prellen ', 'Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
-2025-12-19,"['Abwehrtechnik/Beinarbeit ', 'Herausspielen des Balles', 'Ball in Kreis ablegen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-08-22,"['Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', 'Sprungwurf duell', 'Kreis anspielen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-08-27,"['Duell um die Welt', 'Einpassen auf Bänkli', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-08-29,"['Kernwurf-Variationen mit 1-3 Schritten', 'Rennen zum Ball', 'Ablaufen mit/ohne Ball ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-03,"['Täuschungen Nullkontakt li/re; re/li mit Ball ', 'Abwehrtechnik/Beinarbeit ', '1:1 - 4:4 Gleichzahl mit und ohne Kreisläufer (mit zwei Anspielstationen) ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-05,"['Zweierpassen übers ganze Feld', 'Tschechenviereck', 'Abwehrverhalten ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-10,"['Prellen ', 'Abdrängen des Gegners ', 'Gegenstoss 2:1 zum 3:2']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-12,"['Sprungwurf hoch/weit', 'Täuschen/Durchbrechen (ohne/mit Ball)', 'Ball auf Kasten abschiessen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-17,"['Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', 'Herausspielen des Balles', 'Ball in Kreis ablegen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-19,"['Duell um die Welt', 'Einpassen auf Bänkli', '5er Passen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-24,"['Rennen zum Ball', 'Sprungwurf duell', 'Viereck passen - drei mal prellen für Punkt']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-09-26,"['Kernwurf-Variationen mit 1-3 Schritten', 'Täuschungen Nullkontakt li/re; re/li mit Ball ', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-10-15,"['Parallelpassen', 'Tschechenviereck', 'Kreis anspielen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-10-17,"['Abwehrtechnik/Beinarbeit ', 'Abdrängen des Gegners ', '1:1 - 4:4 Gleichzahl mit und ohne Kreisläufer (mit zwei Anspielstationen) ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-10-22,"['Täuschen/Durchbrechen (ohne/mit Ball)', 'Zweierpassen übers ganze Feld', 'Ablaufen mit/ohne Ball ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-10-24,"['Sprungwurf hoch/weit', 'Herausspielen des Balles', 'Vom 2:1 zum 4:3 ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-10-29,"['Prellen ', 'Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', 'Ball auf Kasten abschiessen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-10-31,"['Rennen zum Ball', 'Einpassen auf Bänkli', 'Abwehrverhalten ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-05,"['Täuschungen Nullkontakt li/re; re/li mit Ball ', 'Sprungwurf duell', 'Gegenstoss 2:1 zum 3:2']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-07,"['Parallelpassen', 'Tschechenviereck', 'Viereck passen - drei mal prellen für Punkt']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-12,"['Kernwurf-Variationen mit 1-3 Schritten', 'Abwehrtechnik/Beinarbeit ', 'Ball in Kreis ablegen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-14,"['Abdrängen des Gegners ', 'Duell um die Welt', '5er Passen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-19,"['Sprungwurf hoch/weit', 'Zweierpassen übers ganze Feld', 'Kreis anspielen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-21,"['Täuschen/Durchbrechen (ohne/mit Ball)', 'Passformen (Kernwurfpass, Bodenpass, Gegenstosspass) in der Bewegung', '1:1 - 4:4 Gleichzahl mit und ohne Kreisläufer (mit zwei Anspielstationen) ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-26,"['Prellen ', 'Rennen zum Ball', 'Ablaufen mit/ohne Ball ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-11-28,"['Herausspielen des Balles', 'Einpassen auf Bänkli', 'Ball auf Kasten abschiessen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-12-03,"['Sprungwurf duell', 'Tschechenviereck', 'Abwehrverhalten ']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-12-05,"['Kernwurf-Variationen mit 1-3 Schritten', 'Parallelpassen', '2:1 bis 3:2 am Flügel']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-12-10,"['Abwehrtechnik/Beinarbeit ', 'Abdrängen des Gegners ', 'Gegenstoss 2:1 zum 3:2']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-12-12,"['Sprungwurf hoch/weit', 'Täuschungen Nullkontakt li/re; re/li mit Ball ', 'Ball in Kreis ablegen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-12-17,"['Zweierpassen übers ganze Feld', 'Duell um die Welt', '5er Passen']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
+2025-12-19,"['Prellen ', 'Rennen zum Ball', 'Viereck passen - drei mal prellen für Punkt']","['Technik', 'Technik', 'Spielfähigkeit']",U13A/Catalogs_U13A/Cat001.csv
