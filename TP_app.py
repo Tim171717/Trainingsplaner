@@ -17,7 +17,7 @@ Hallen = {'Goldau': 'Goldau Berufsbildungszentrum',
           'Muotathal': 'Sporthalle Muotathal',
           'Schwyz': 'Schwyz Schwyz'}
 if st.session_state.get('Saison', None) is None:
-    st.session_state['Saison'] = '2526HR'
+    st.session_state['Saison'] = '2526RR'
 
 # --- Title ---
 st.title("Trainingsplaner")
