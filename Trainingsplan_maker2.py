@@ -369,7 +369,7 @@ def get_traveltime(arena, startpoint):
     td = timedelta(hours=hours, minutes=minutes)
 
     total_minutes = td.total_seconds() / 60
-    rounded_minutes = math.ceil(total_minutes / 15) * 15
+    rounded_minutes = math.ceil((total_minutes - 10) / 15) * 15
     return timedelta(minutes=rounded_minutes)
 
 def mergecells(table, ix0, ix1):
@@ -450,19 +450,21 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     turnier = []
     for s in newspiele:
         if s[-1]:
-            data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
-                         (s[3] - timedelta(hours=1)).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
             turnier.append(False)
             if s[0]:
                 df.loc[len(df)] = [(team + ' ') * show_teamname + 'Heimspiel gegen ' + s[2], 'Heimspiel', s[5],
                                    s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1)).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), 'Anpfiff: ' + s[3].strftime('%H:%M')]
+                data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
+                             (s[3] - timedelta(hours=1)).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
                 home.append(True)
             else:
                 traveltime = get_traveltime(s[5], startpoint)
                 df.loc[len(df)] = [(team + ' ') * show_teamname + 'Auswärtsspiel gegen ' + s[1], 'Auswärtsspiel', s[5],
                                    s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), 'Anpfiff: ' + s[3].strftime('%H:%M')]
+                data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
+                             (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
                 home.append(False)
         else:
             turnier.append(True)
@@ -479,7 +481,7 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                                    s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), '']
                 data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
-                             (s[3] - timedelta(hours=1)).strftime('%H:%M'), 'Auswärtsturnier', '', s[5], "", ""])
+                             (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'), 'Auswärtsturnier', '', s[5], "", ""])
                 home.append(False)
 
     output = StringIO()
