@@ -345,6 +345,10 @@ def parse_summary(summary, my_club="HSG Mythen"):
     gameid = parts[0]
     home_team = parts[1]
     away_team = parts[2]
+    if home_team[-1] == '*':
+        home_team = home_team[:-2]
+    if away_team[-1] == '*':
+        away_team = away_team[:-2]
     return [gameid, home_team[:len(my_club)] == my_club, home_team, away_team]
 
 def get_traveltime(arena, startpoint):
