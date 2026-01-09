@@ -196,10 +196,9 @@ def get_dates(saison, weekdays):
 def nextdate(saison, date, weekdays):
     dates = get_dates(saison, weekdays)
     dateday = date.replace(hour=0, minute=0, second=0, microsecond=0)
-    try:
-        return min([d for d in dates if d >= dateday])
-    except:
-        return dates[-1]
+    
+    future = [d for d in dates if d >= dateday]
+    return min(future) if future else dates[-1]
 
 def S(s):
     return s[:2] + '/' + s[2:4] + ' ' + s[4:]
