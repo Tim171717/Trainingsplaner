@@ -1,3 +1,5 @@
+from selectors import SelectSelector
+
 import numpy as np
 import pandas as pd
 import math
@@ -501,6 +503,9 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
     if False in Turnier:
         columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", "Heim", "Gast", "Halle",
                    "Fahren\n(Anzahl Plätze\nohne Fahrer)", "Trikots\nwaschen"]
+        # for n, d in enumerate(data):
+        #     if d[5] == 'Goldau Berufsbildungszentrum (BBZG)':
+        #         data[n][5] = 'Goldau BBZG'
         df = pd.DataFrame(data, columns=columns)
         col_widths = {
             0: 0.09,  # Datum
@@ -510,6 +515,8 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
             4: 0.17,  # Gast
             5: 0.22,  # Halle
             6: 0.1,  # Fahren
+            # 5: 0.12,  # Halle
+            # 6: 0.2,  # Fahren
             7: 0.08  # Trikots
         }
         fahrenloc = 6
@@ -548,7 +555,7 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
             cell.set_facecolor("black")
             cell.set_text_props(color="white")
         # if not home[row - 1]:
-        #     cell.set_height(0.14)
+        #     cell.set_height(0.18)
         if row > 0 and not Turnier[row - 1]:
             if col == 3 and row > 0 and home[row - 1]:
                 cell.set_text_props(weight='bold')
