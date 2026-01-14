@@ -547,6 +547,8 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
         if col == fahrenloc and row > 0 and home[row - 1]:
             cell.set_facecolor("black")
             cell.set_text_props(color="white")
+        # if not home[row - 1]:
+        #     cell.set_height(0.14)
         if row > 0 and not Turnier[row - 1]:
             if col == 3 and row > 0 and home[row - 1]:
                 cell.set_text_props(weight='bold')
@@ -557,7 +559,7 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
                 mergecells(table, (row, 3), (row, 4))
                 cell.set_text_props(weight='bold')
 
-    plt.title("Name:", fontsize=14, weight='bold', pad=-20, loc='left')
+    # plt.title("Name:", fontsize=14, weight='bold', pad=-20, loc='left')
     img_buf = BytesIO()
     plt.tight_layout()
     plt.savefig(img_buf, format='png', dpi=600)
