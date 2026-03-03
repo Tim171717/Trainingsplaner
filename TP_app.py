@@ -63,7 +63,10 @@ if st.session_state.get('loggedin', False):
 
     with tab1:
         try:
-            locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
+            if os.name == 'nt':  # Windows
+                locale.setlocale(locale.LC_TIME, 'German_Germany')
+            else:
+                locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
         except:
             locale.setlocale(locale.LC_TIME, '')
 
@@ -392,8 +395,9 @@ if st.session_state.get('loggedin', False):
             treffpunkt = st.selectbox(f"Treffpunkt", Hallen.keys())
             teamname = st.checkbox('Teamname im Titel')
             druck = st.checkbox('Fahrerliste als Druckversion')
+            Einteilung = st.checkbox('Einteilungsversion')
 
-            if st.button("CSV erstellen "):
+            if st.button("Fahrerliste erstellen "):
                 cal = Calendar.from_ical(uploaded_icsfile.read())
                 with st.spinner('Wart mal churz'):
                     csv_data, fahrerliste = get_Matches(
@@ -401,7 +405,8 @@ if st.session_state.get('loggedin', False):
                         team=Team,
                         startpoint=Hallen[treffpunkt],
                         show_teamname=teamname,
-                        printversion = druck
+                        printversion = druck,
+                        Einteilung = Einteilung,
                     )
                 st.session_state["spiele_made"] = True
                 st.session_state["csv_data"] = csv_data
@@ -420,7 +425,7 @@ if st.session_state.get('loggedin', False):
                 st.download_button(
                     label="Fahrerliste",
                     data=st.session_state["fahrerliste"],
-                    file_name=f'Fahrerliste_' + Team + '.pdf',
+                    file_name=f'Fahrerliste_' + Team + Einteilung * '_Einteilung' + '.pdf',
                     mime='application/pdf'
                 )
 
