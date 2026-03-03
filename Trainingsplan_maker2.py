@@ -18,6 +18,9 @@ from icalendar import Calendar
 import googlemaps
 import matplotlib as mpl
 
+if os.name == 'nt':
+    import subprocess, tempfile
+
 g = Github(st.secrets["github_token"])
 repo = g.get_repo("Tim171717/Trainingsplaner")
 
@@ -421,7 +424,7 @@ def format_german_date(dt):
     return f'{weekday} | {dt.strftime("%d.%m.%Y")}'
 
 def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='Goldau Berufsbildungszentrum',
-                show_teamname=True, printversion=False):
+                show_teamname=True, printversion=False, Einteilung=False):
     df = pd.read_excel(excel_file, engine='openpyxl').iloc[:-1]
 
     spiele = []
@@ -497,28 +500,46 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
     writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(df.to_dict(orient="records"))
-    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion), #Baspo_output(newspiele)
+    return output.getvalue(), Fahrerliste(data, home, turnier, dotwo=printversion, Einteilung=Einteilung)
 
-def Fahrerliste(data, home, Turnier, dotwo=False):
+def Fahrerliste(data, home, Turnier, dotwo=False, Einteilung=False):
     if False in Turnier:
+        if not Einteilung and os.name == 'nt':
+            try:
+                return new_Fahrerliste(data, home, Einteilung)
+            except Exception as e:
+                print(e)
+                None
+
         columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", "Heim", "Gast", "Halle",
                    "Fahren\n(Anzahl Plätze\nohne Fahrer)", "Trikots\nwaschen"]
-        # for n, d in enumerate(data):
-        #     if d[5] == 'Goldau Berufsbildungszentrum (BBZG)':
-        #         data[n][5] = 'Goldau BBZG'
+        if Einteilung:
+            for n, d in enumerate(data):
+                if d[5] == 'Goldau Berufsbildungszentrum (BBZG)':
+                    data[n][5] = 'Goldau BBZG'
         df = pd.DataFrame(data, columns=columns)
-        col_widths = {
-            0: 0.09,  # Datum
-            1: 0.085,  # Zeit
-            2: 0.085,  # Besammlung
-            3: 0.17,  # Heim
-            4: 0.17,  # Gast
-            5: 0.22,  # Halle
-            6: 0.1,  # Fahren
-            # 5: 0.12,  # Halle
-            # 6: 0.2,  # Fahren
-            7: 0.08  # Trikots
-        }
+        if not Einteilung:
+            col_widths = {
+                0: 0.09,  # Datum
+                1: 0.085,  # Zeit
+                2: 0.085,  # Besammlung
+                3: 0.17,  # Heim
+                4: 0.17,  # Gast
+                5: 0.22,  # Halle
+                6: 0.1,  # Fahren
+                7: 0.08  # Trikots
+            }
+        else:
+            col_widths = {
+                0: 0.09,  # Datum
+                1: 0.085,  # Zeit
+                2: 0.085,  # Besammlung
+                3: 0.17,  # Heim
+                4: 0.17,  # Gast
+                5: 0.12,  # Halle
+                6: 0.2,  # Fahren
+                7: 0.08  # Trikots
+            }
         fahrenloc = 6
     else:
         columns = ["Datum", "Zeit", "Besammlung/\nAbfahrt", 'Turnier', "Halle", "Fahren\n(Anzahl Plätze\nohne Fahrer)",
@@ -534,6 +555,29 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
             6: 0.08  # Trikots
         }
         fahrenloc = 5
+
+    Fahrer = [
+        None,
+        'Mihailo (5), Melanie (4),\nSophia(5), Amina(4)',
+        None,
+        'Livia(4), Amina(2),\nAuf der Mauer(5), Noelia(4)',
+        None,
+        'Mattia (5), Andrin (5),\nLivia(4), Sophia(5)',
+        None,
+        None,
+        'Beeler (6), Zeno(5),\nHabermacher(5), Samina (4)',
+    ]
+    Waschen = [
+        'Livia',
+        'Melanie',
+        'Andrin',
+        'Auf der\nMauer',
+        'Noelia',
+        None,
+        'Habermacher',
+        'Beeler',
+        'Zeno',
+    ]
 
     fig, ax = plt.subplots(figsize=(14, 5))
     ax.axis('off')
@@ -554,8 +598,17 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
         if col == fahrenloc and row > 0 and home[row - 1]:
             cell.set_facecolor("black")
             cell.set_text_props(color="white")
-        # if not home[row - 1]:
-        #     cell.set_height(0.18)
+            cell.set_text_props()
+        if Einteilung and col == fahrenloc and row > 0 and not home[row - 1]:
+            cell.get_text().set_text(Fahrer[row - 1])
+            cell.set_text_props(weight='bold')
+            cell.set_fontsize(11)
+        if Einteilung and col == fahrenloc + 1 and row > 0:
+            cell.get_text().set_text(Waschen[row - 1])
+            cell.set_text_props(weight='bold')
+            cell.set_fontsize(11)
+        if Einteilung and not home[row - 1]:
+            cell.set_height(0.18)
         if row > 0 and not Turnier[row - 1]:
             if col == 3 and row > 0 and home[row - 1]:
                 cell.set_text_props(weight='bold')
@@ -566,7 +619,8 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
                 mergecells(table, (row, 3), (row, 4))
                 cell.set_text_props(weight='bold')
 
-    # plt.title("Name:", fontsize=14, weight='bold', pad=-20, loc='left')
+    if not Einteilung:
+        plt.title("Name:", fontsize=14, weight='bold', pad=-20, loc='left')
     img_buf = BytesIO()
     plt.tight_layout()
     plt.savefig(img_buf, format='png', dpi=600)
@@ -574,7 +628,7 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
 
     img_buf.seek(0)
     img = mpimg.imread(img_buf)
-    if dotwo:
+    if not Einteilung and dotwo:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8.27, 11.69))
         ax2.axis('off')
         ax2.imshow(img)
@@ -587,6 +641,140 @@ def Fahrerliste(data, home, Turnier, dotwo=False):
     plt.savefig(buf, format='pdf', dpi=600)
     buf.seek(0)
     return buf.getvalue()
+
+def new_Fahrerliste(data, home, Einteilung):
+    if Einteilung:
+        for n, d in enumerate(data):
+            if d[5] == 'Goldau Berufsbildungszentrum (BBZG)':
+                data[n][5] = 'Goldau BBZG'
+    latex_lines = [
+        r"""
+        \documentclass[a4paper,landscape,8pt]{extarticle}
+        \usepackage[margin=1.5cm]{geometry}
+        \usepackage[T1]{fontenc}
+        \usepackage[utf8]{inputenc}
+        \usepackage{hyperref}
+        \usepackage{pifont}
+        \usepackage{array}
+        \usepackage[table,dvipsnames]{xcolor}
+        \usepackage{booktabs}
+        \usepackage{colortbl}
+        \usepackage{graphicx}
+        \usepackage{dejavu}
+        \usepackage{anyfontsize}
+        \renewcommand\normalsize{
+          \fontsize{7}{9}\selectfont
+          \sffamily
+        }
+
+
+        \definecolor{mygray}{rgb}{0.95, 0.95, 0.95}
+        \newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+
+        \hypersetup{pdfauthor={},pdftitle={}}
+
+        \begin{document}
+        \pagestyle{empty}
+        \null
+        \vfill
+
+        \noindent\textbf{Name:} \TextField[
+          name=name,
+          height=0.4cm,
+          width=5cm,
+          borderwidth=0
+        ]{}
+
+
+        \vspace{0.5cm}
+
+        \renewcommand{\arraystretch}{1.5}
+        \setlength{\tabcolsep}{6pt}
+
+        \noindent\begin{tabular}{|
+        >{\centering\arraybackslash}M{2cm}|
+        >{\centering\arraybackslash}M{2cm}|
+        >{\centering\arraybackslash}M{2cm}|
+        >{\centering\arraybackslash}M{4cm}|
+        >{\centering\arraybackslash}M{4cm}|
+        >{\centering\arraybackslash}M{5.3cm}|
+        >{\centering\arraybackslash}M{2.2cm}|
+        >{\centering\arraybackslash}M{1.3cm}|}
+        \hline
+        \cellcolor{mygray}\textbf{Datum} &
+        \cellcolor{mygray}\textbf{Zeit} &
+        \cellcolor{mygray}\textbf{Besammlung/ Abfahrt} &
+        \cellcolor{mygray}\textbf{Heim} &
+        \cellcolor{mygray}\textbf{Gast} &
+        \cellcolor{mygray}\textbf{Halle} &
+        \cellcolor{mygray}\textbf{Fahren \mbox{(Anzahl Plätze} ohne Fahrer)} &
+        \cellcolor{mygray}\textbf{Trikots waschen} \\
+        \hline
+        """
+    ]
+    n = 0
+    m = len(data) - 1
+    for d, h in zip(data, home):
+        if h:
+            latex_lines.append(
+                rf"""
+                {d[0]} & {d[1]} & {d[2]} & \textbf{{{d[3]}}} & {d[4]} & {d[5]} & \cellcolor{{{'black'}}} & \CheckBox[name=cb{n},height=0.2cm,width=0.5cm,bordercolor={{{'1 1 1'}}}]{{{''}}}\\
+                """
+            )
+        else:
+            latex_lines.append(
+                rf"""
+                {d[0]} & {d[1]} & {d[2]} & {d[3]} & \textbf{{{d[4]}}} & {d[5]} & \TextField[
+                    name=t{n},
+                    width=\linewidth,
+                    height=0.2cm,
+                    borderwidth=0
+                ]{{{''}}} & \CheckBox[name=cb{n},height=0.2cm,width=0.5cm,bordercolor={{{'1 1 1'}}}]{{{''}}}\\
+                """
+            )
+        latex_lines.append(
+            r"""
+            \hline
+            """
+        )
+        n += 1
+    latex_lines.append(
+        r"""
+        
+        \end{tabular}
+        
+        \vspace{1cm}
+        \vfill
+        \null
+        
+        
+        \end{document}
+        """
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tex_path = os.path.join(tmpdir, "temp.tex")
+
+        with open(tex_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(latex_lines))
+
+        subprocess.run(
+            ["pdflatex", "-interaction=nonstopmode", tex_path],
+            cwd=tmpdir,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+        pdf_path = os.path.join(tmpdir, "temp.pdf")
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+
+    pdf_io = BytesIO(pdf_bytes)
+    return pdf_io
+
+
+
 
 def Baspo_output(spiele):
     dfba = pd.read_csv('Baspo_vorlage.csv', sep=';')
