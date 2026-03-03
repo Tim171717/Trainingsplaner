@@ -67,6 +67,8 @@ if st.session_state.get('loggedin', False):
         except:
             locale.setlocale(locale.LC_TIME, '')
 
+        st.write(os.name)
+
         tab1a, tab2a = st.columns([3, 1])
         with tab1a:
             dates = get_dates(Saison, weekdays)
