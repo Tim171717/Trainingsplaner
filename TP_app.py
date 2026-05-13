@@ -391,7 +391,7 @@ if st.session_state.get('loggedin', False):
         with tab4a:
             uploaded_icsfile = st.file_uploader("Terminplan von Handball.ch hochladen", type="ics")
             treffpunkt = st.selectbox(f"Treffpunkt", Hallen.keys())
-            teamname = st.checkbox('Teamname im Titel')
+            teamname = st.checkbox('Teamname im Titel', value=True)
             druck = st.checkbox('Fahrerliste als Druckversion')
             Einteilung = st.checkbox('Einteilungsversion')
 
