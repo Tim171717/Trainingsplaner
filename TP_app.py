@@ -17,7 +17,7 @@ Hallen = {'Goldau': 'Goldau Berufsbildungszentrum',
           'Muotathal': 'Sporthalle Muotathal',
           'Schwyz': 'Schwyz Schwyz'}
 if st.session_state.get('Saison', None) is None:
-    st.session_state['Saison'] = '2526RR'
+    st.session_state['Saison'] = '2627HR'
 
 # --- Title ---
 st.title("Trainingsplaner")
@@ -69,8 +69,6 @@ if st.session_state.get('loggedin', False):
                 locale.setlocale(locale.LC_TIME, 'de_DE.UTF-8')
         except:
             locale.setlocale(locale.LC_TIME, '')
-
-        st.write(os.name)
 
         tab1a, tab2a = st.columns([3, 1])
         with tab1a:
