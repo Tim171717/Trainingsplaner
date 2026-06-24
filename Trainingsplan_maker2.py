@@ -366,7 +366,6 @@ def get_traveltime(arena, startpoint):
     destinations = [arena]
 
     result = gmaps.distance_matrix(origins, destinations, mode='driving')
-
     duration = result['rows'][0]['elements'][0]['duration']['text']
 
     hours = 0
@@ -456,6 +455,16 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                 for g in games:
                     newspiele.append(g[1:] + [True])
     newspiele = sorted(newspiele, key=lambda x: x[4])
+    # newspiele = [
+    #     [True, 'HSG Mythen Shooters 1', 'SG Ruswil Wolhusen', datetime(2026, 9, 6, 10, 0), datetime(2026, 9, 6, 11, 30), 'Goldau Berufsbildungszentrum (BBZG)', True],
+    #     [False, 'BSV Stans 1', 'HSG Mythen Shooters 1', datetime(2026, 9, 12, 13, 30), datetime(2026, 9, 12, 15, 0), 'Stans Eichli', True],
+    #     [True, 'HSG Mythen Shooters 1', 'SPONO EAGLES', datetime(2026, 9, 19, 12, 0), datetime(2026, 9, 19, 13, 30), 'Brunnen Sporthalle', True],
+    #     [False, 'TV Dagmersellen', 'HSG Mythen Shooters 1', datetime(2026, 10, 17, 16, 00), datetime(2026, 10, 17, 17,30), 'Dagmersellen Chruzmatt', True],
+    #     [True, 'HSG Mythen Shooters 1', 'Handball Emmen a', datetime(2026, 10, 25, 13, 0), datetime(2026, 10, 25, 14, 30), 'Brunnen Sporthalle', True],
+    #     [False, 'HC Kriens', 'HSG Mythen Shooters 1', datetime(2026, 10, 31, 11, 30), datetime(2026, 10, 18, 13, 0), 'Kriens Meiersmatt', True],
+    #     [True, 'HSG Mythen Shooters 1', 'HC KTV Altdorf', datetime(2026, 11, 8, 10, 0), datetime(2026, 11, 11, 11, 30), 'Goldau Berufsbildungszentrum (BBZG)', True],
+    #     [False, 'STV Willisau', 'HSG Mythen Shooters 1', datetime(2026, 11, 29, 10, 30), datetime(2026, 11, 18, 12, 0), 'Willisau Hallenbad', True],
+    # ]
     data = []
     home = []
     turnier = []
