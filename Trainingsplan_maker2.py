@@ -17,6 +17,7 @@ import csv
 from icalendar import Calendar
 import googlemaps
 import matplotlib as mpl
+from zoneinfo import ZoneInfo
 
 if os.name == 'nt':
     import subprocess, tempfile
@@ -358,12 +359,13 @@ def parse_summary(summary, my_club="HSG Mythen"):
         away_team = away_team[:-2]
     return [gameid, home_team[:len(my_club)] == my_club, home_team, away_team]
 
-def get_traveltime(arena, startpoint):
+def get_traveltime(arena, startpoint, starttime=datetime.now()):
     API_KEY = st.secrets["google_apikey"]
     gmaps = googlemaps.Client(key=API_KEY)
 
     origins = [startpoint]
     destinations = [arena]
+    starttime = (starttime-timedelta(hours=1)).replace(tzinfo=ZoneInfo("Europe/Zurich"))
 
     result = gmaps.distance_matrix(origins, destinations, mode='driving')
     duration = result['rows'][0]['elements'][0]['duration']['text']
@@ -418,6 +420,13 @@ def mergecells(table, ix0, ix1):
     # hide the text in the 1st cell
     txts[1].set_visible(False)
 
+def round_to_quarter_hour(dt):
+    seconds = (dt - dt.min).seconds
+    rounding = 15 * 60  # 15 minutes in seconds
+    rounded_seconds = round(seconds / rounding) * rounding
+    return dt + timedelta(seconds=rounded_seconds - seconds,
+                          microseconds=-dt.microsecond)
+
 def format_german_date(dt):
     weekday = weekdays_de[dt.weekday()]  # Monday=0, Sunday=6
     return f'{weekday} | {dt.strftime("%d.%m.%Y")}'
@@ -445,15 +454,16 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
             newspiele.append(games[1:] + [True])
         else:
             dates = list(set([g[4].date() for g in games]))
-            if len(dates) == 1:
-                starttime = min([g[4] for g in games])
-                endtime = max([g[5] for g in games])
-                location = games[0][6].split()[0]
-                home = location in ['Goldau', 'Brunnen', 'Schwyz']
-                newspiele.append([home, location, None, starttime, endtime, games[0][6], False])
-            else:
-                for g in games:
-                    newspiele.append(g[1:] + [True])
+            for date in dates:
+                games2 = [s for s in games if s[4].date() == date]
+                if len(games2) != 1:
+                    starttime = min([g[4] for g in games2])
+                    endtime = max([g[5] for g in games2])
+                    location = games2[0][6].split()[0]
+                    home = location in ['Goldau', 'Brunnen', 'Schwyz']
+                    newspiele.append([home, location, None, starttime, endtime, games2[0][6], False])
+                else:
+                    newspiele.append(games2[0][1:] + [True])
     newspiele = sorted(newspiele, key=lambda x: x[4])
     # newspiele = [
     #     [True, 'HSG Mythen Shooters 1', 'SG Ruswil Wolhusen', datetime(2026, 9, 6, 10, 0), datetime(2026, 9, 6, 11, 30), 'Goldau Berufsbildungszentrum (BBZG)', True],
@@ -479,12 +489,12 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                              (s[3] - timedelta(hours=1)).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
                 home.append(True)
             else:
-                traveltime = get_traveltime(s[5], startpoint)
+                traveltime = get_traveltime(s[5], startpoint, s[3])
                 df.loc[len(df)] = [(team + ' ') * show_teamname + 'Auswärtsspiel gegen ' + s[1], 'Auswärtsspiel', s[5],
-                                   s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
+                                   s[3].strftime('%d.%m.%Y'), (round_to_quarter_hour(s[3]) - timedelta(hours=1) - traveltime).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), 'Anpfiff: ' + s[3].strftime('%H:%M')]
                 data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
-                             (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
+                             (round_to_quarter_hour(s[3]) - timedelta(hours=1) - traveltime).strftime('%H:%M'), s[1], s[2], s[5], "", ""])
                 home.append(False)
         else:
             turnier.append(True)
@@ -496,12 +506,12 @@ def get_Matches(cal, excel_file='Gumb_Vorlage.xlsx', team='U13_A', startpoint='G
                              (s[3] - timedelta(hours=1)).strftime('%H:%M'), 'Heimturnier', '', s[5], "", ""])
                 home.append(True)
             else:
-                traveltime = get_traveltime(s[5], startpoint)
+                traveltime = get_traveltime(s[5], startpoint, s[3])
                 df.loc[len(df)] = [(team + ' ') * show_teamname + 'Auswärtsturnier in ' + s[1], 'Auswärtsturnier', s[5],
-                                   s[3].strftime('%d.%m.%Y'), (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'),
+                                   s[3].strftime('%d.%m.%Y'), (round_to_quarter_hour(s[3]) - timedelta(hours=1) - traveltime).strftime('%H:%M'),
                                    s[4].strftime('%H:%M'), '']
                 data.append([format_german_date(s[3]), s[3].strftime('%H:%M'),
-                             (s[3] - timedelta(hours=1) - traveltime).strftime('%H:%M'), 'Auswärtsturnier', '', s[5], "", ""])
+                             (round_to_quarter_hour(s[3]) - timedelta(hours=1) - traveltime).strftime('%H:%M'), 'Auswärtsturnier', '', s[5], "", ""])
                 home.append(False)
 
     output = StringIO()

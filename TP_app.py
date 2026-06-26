@@ -416,7 +416,7 @@ if st.session_state.get('loggedin', False):
                 st.download_button(
                     label="Gumb-Upload",
                     data=st.session_state["csv_data"],
-                    file_name=f'Gumb_upload.csv',
+                    file_name=f'Gumb_upload_' + Team + '.csv',
                     mime='text/csv'
                 )
 
